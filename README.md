@@ -1,0 +1,2 @@
+# whaddyasay
+Core Project
