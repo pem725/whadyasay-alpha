@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Do You Say? - Conversation Coach</title>
+    <link rel="stylesheet" href="coach-styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💬 What Do You Say?</h1>
+            <p>Your personal conversation coach</p>
+        </header>
+
+        <main class="coach-interface">
+            <!-- Initial Prompt -->
+            <section class="prompt-section" id="promptSection">
+                <div class="coach-avatar">🤝</div>
+                <h2>Tell me about the situation</h2>
+                <p>What conversation are you preparing for? Who are you talking to and what's the context?</p>
+                
+                <div class="input-methods">
+                    <div class="voice-input">
+                        <button id="voiceBtn" class="voice-btn">
+                            <span class="mic-icon">🎤</span>
+                            <span class="voice-text">Speak your situation</span>
+                        </button>
+                        <div id="voiceStatus" class="voice-status hidden">
+                            <span class="pulse">🔴</span> Listening...
+                        </div>
+                    </div>
+                    
+                    <div class="text-divider">
+                        <span>or</span>
+                    </div>
+                    
+                    <div class="text-input">
+                        <textarea id="situationInput" placeholder="Type your situation here... 
+
+For example:
+• I need to ask my boss for a raise
+• My partner and I keep arguing about money
+• I want to apologize to my friend but don't know how
+• I need to give difficult feedback to a team member"></textarea>
+                        <button id="analyzeBtn" class="analyze-btn">
+                            ✨ Get Advice
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Conversation Analysis -->
+            <section class="analysis-section hidden" id="analysisSection">
+                <div class="analysis-header">
+                    <button id="backBtn" class="back-btn">← Back</button>
+                    <h3>Conversation Strategy</h3>
+                </div>
+                
+                <div class="advice-content" id="adviceContent">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="practiceBtn" class="practice-btn">
+                        🎭 Practice This Conversation
+                    </button>
+                    <button id="saveAdviceBtn" class="save-btn">
+                        💾 Save This Advice
+                    </button>
+                    <button id="newSituationBtn" class="new-btn">
+                        🆕 New Situation
+                    </button>
+                </div>
+            </section>
+
+            <!-- Practice Mode -->
+            <section class="practice-section hidden" id="practiceSection">
+                <div class="practice-header">
+                    <button id="backToPlanBtn" class="back-btn">← Back to Plan</button>
+                    <h3>Practice Session</h3>
+                </div>
+                
+                <div class="practice-content">
+                    <div class="scenario-setup" id="scenarioSetup">
+                        <!-- Practice scenario will be set up here -->
+                    </div>
+                    
+                    <div class="practice-controls">
+                        <button id="startPracticeBtn" class="start-practice-btn">
+                            🎬 Start Role Play
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Navigation -->
+        <nav class="bottom-nav">
+            <button id="coachTab" class="nav-btn active">
+                <span>💬</span>
+                <span>Coach</span>
+            </button>
+            <button id="memoryTab" class="nav-btn">
+                <span>🧠</span>
+                <span>Memories</span>
+            </button>
+            <button id="historyTab" class="nav-btn">
+                <span>📚</span>
+                <span>History</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Analyzing your situation...</p>
+        </div>
+    </div>
+
+    <script src="coach-script.js"></script>
+</body>
+</html>
