@@ -294,7 +294,7 @@
                         if (success) {
                             this.authenticated = true;
                             this.showSuccess('Authentication successful! Redirecting...');
-                            sessionStorage.setItem('authenticated', 'true');
+                            sessionStorage.setItem('whaddyasay_authenticated', 'true');
                             setTimeout(() => {
                                 window.location.href = 'index.html';
                             }, 1500);
@@ -315,7 +315,7 @@
                         if (data.success && data.authenticated) {
                             this.authenticated = true;
                             this.showSuccess('Authentication successful! Redirecting...');
-                            sessionStorage.setItem('authenticated', 'true');
+                            sessionStorage.setItem('whaddyasay_authenticated', 'true');
                             setTimeout(() => {
                                 window.location.href = 'index.html';
                             }, 1500);
@@ -353,7 +353,7 @@
                         if (success) {
                             this.authenticated = true;
                             this.showSuccess('Encryption setup complete! Redirecting...');
-                            sessionStorage.setItem('authenticated', 'true');
+                            sessionStorage.setItem('whaddyasay_authenticated', 'true');
                             setTimeout(() => {
                                 window.location.href = 'index.html';
                             }, 2000);
@@ -374,7 +374,7 @@
                         if (data.success) {
                             this.authenticated = true;
                             this.showSuccess('Encryption setup complete! Redirecting...');
-                            sessionStorage.setItem('authenticated', 'true');
+                            sessionStorage.setItem('whaddyasay_authenticated', 'true');
                             setTimeout(() => {
                                 window.location.href = 'index.html';
                             }, 2000);
@@ -482,7 +482,7 @@
         const authManager = new AuthenticationManager();
 
         // Check if already authenticated
-        if (sessionStorage.getItem('authenticated') === 'true') {
+        if (sessionStorage.getItem('whaddyasay_authenticated') === 'true') {
             window.location.href = 'index.html';
         }
     </script>

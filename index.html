@@ -131,35 +131,29 @@ For example:
     </div>
 
     <script>
-        // PWA-compatible authentication check
+        // Simplified authentication check for GitHub Pages
         async function checkAuthentication() {
             try {
-                // Use PWA crypto manager if available
-                if (window.cryptoManager) {
-                    const status = window.cryptoManager.getSecurityStatus();
-                    if (status.authenticated) {
-                        return true;
-                    }
+                // Check session storage first (set by auth.html)
+                const sessionAuth = sessionStorage.getItem('whaddyasay_authenticated');
+                if (sessionAuth === 'true') {
+                    console.log('✅ Session authenticated');
+                    return true;
                 }
 
-                // Try server check if online
-                if (navigator.onLine) {
-                    const response = await fetch('/api/security/status');
-                    const data = await response.json();
-                    
-                    if (!data.success || !data.status.setup_complete || !data.status.authenticated) {
-                        window.location.href = 'auth.html';
-                        return false;
-                    }
+                // Check if PWA crypto manager is available and authenticated
+                if (window.cryptoManager && window.cryptoManager.authenticated) {
+                    console.log('✅ PWA crypto manager authenticated');
                     return true;
-                } else {
-                    // Offline - redirect to auth for setup
-                    window.location.href = '/auth.html';
-                    return false;
                 }
+
+                // No valid authentication found - redirect to auth
+                console.log('❌ No authentication found, redirecting to auth.html');
+                window.location.href = 'auth.html';
+                return false;
             } catch (error) {
                 console.error('Auth check failed:', error);
-                window.location.href = '/auth.html';
+                window.location.href = 'auth.html';
                 return false;
             }
         }
