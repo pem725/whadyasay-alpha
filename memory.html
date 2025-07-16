@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Capture - What Do You Say?</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📱 Memory Capture</h1>
+            <p>Capture what's near and dear to you</p>
+        </header>
+
+        <main class="capture-interface">
+            <!-- Text Input -->
+            <section class="input-section">
+                <h2>✍️ Write Something</h2>
+                <textarea id="textInput" placeholder="What's on your mind? Describe something meaningful to you..."></textarea>
+            </section>
+
+            <!-- Voice Recording -->
+            <section class="input-section">
+                <h2>🎤 Record Your Voice</h2>
+                <div class="recording-controls">
+                    <button id="recordBtn" class="record-btn">
+                        <span class="record-icon">🔴</span>
+                        <span class="record-text">Start Recording</span>
+                    </button>
+                    <div id="recordingStatus" class="recording-status hidden">
+                        <span class="pulse">🔴</span> Recording... <span id="recordingTime">00:00</span>
+                    </div>
+                    <audio id="audioPlayback" controls class="hidden"></audio>
+                </div>
+            </section>
+
+            <!-- Photo Capture -->
+            <section class="input-section">
+                <h2>📸 Take a Photo</h2>
+                <div class="photo-controls">
+                    <button id="cameraBtn" class="camera-btn">Open Camera</button>
+                    <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+                    <div id="photoPreview" class="photo-preview hidden"></div>
+                </div>
+            </section>
+
+            <!-- File Upload -->
+            <section class="input-section">
+                <h2>📎 Upload Files</h2>
+                <div class="upload-area" id="uploadArea">
+                    <p>Drag & drop files here or click to browse</p>
+                    <input type="file" id="fileInput" multiple>
+                </div>
+                <div id="fileList" class="file-list"></div>
+            </section>
+
+            <!-- Tags and Metadata -->
+            <section class="input-section">
+                <h2>🏷️ Add Context</h2>
+                <input type="text" id="tagsInput" placeholder="Add tags (comma separated): family, vacation, memories...">
+                <input type="text" id="titleInput" placeholder="Give this memory a title...">
+            </section>
+
+            <!-- Submit -->
+            <section class="submit-section">
+                <button id="submitBtn" class="submit-btn">
+                    💾 Save Memory
+                </button>
+            </section>
+        </main>
+
+        <!-- Navigation -->
+        <nav class="bottom-nav">
+            <button id="coachTab" class="nav-btn">
+                <span>💬</span>
+                <span>Coach</span>
+            </button>
+            <button id="memoryTab" class="nav-btn active">
+                <span>🧠</span>
+                <span>Memories</span>
+            </button>
+            <button id="historyTab" class="nav-btn">
+                <span>📚</span>
+                <span>History</span>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        // Check authentication before loading main app
+        async function checkAuthentication() {
+            try {
+                const response = await fetch('/api/security/status');
+                const data = await response.json();
+                
+                if (!data.success || !data.status.setup_complete || !data.status.authenticated) {
+                    // Redirect to authentication page
+                    window.location.href = '/auth.html';
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/auth.html';
+                return false;
+            }
+        }
+        
+        // Check auth on page load
+        checkAuthentication().then(authenticated => {
+            if (authenticated) {
+                // Load the main app script
+                const script = document.createElement('script');
+                script.src = 'script.js';
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+</body>
+</html>

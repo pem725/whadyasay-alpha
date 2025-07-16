@@ -3,74 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memory Capture - What Do You Say?</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>What Do You Say? - Conversation Coach</title>
+    <link rel="stylesheet" href="coach-styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>📱 Memory Capture</h1>
-            <p>Capture what's near and dear to you</p>
+            <h1>💬 What Do You Say?</h1>
+            <p>Your personal conversation coach</p>
         </header>
 
-        <main class="capture-interface">
-            <!-- Text Input -->
-            <section class="input-section">
-                <h2>✍️ Write Something</h2>
-                <textarea id="textInput" placeholder="What's on your mind? Describe something meaningful to you..."></textarea>
-            </section>
-
-            <!-- Voice Recording -->
-            <section class="input-section">
-                <h2>🎤 Record Your Voice</h2>
-                <div class="recording-controls">
-                    <button id="recordBtn" class="record-btn">
-                        <span class="record-icon">🔴</span>
-                        <span class="record-text">Start Recording</span>
-                    </button>
-                    <div id="recordingStatus" class="recording-status hidden">
-                        <span class="pulse">🔴</span> Recording... <span id="recordingTime">00:00</span>
+        <main class="coach-interface">
+            <!-- Initial Prompt -->
+            <section class="prompt-section" id="promptSection">
+                <div class="coach-avatar">🤝</div>
+                <h2>Tell me about the situation</h2>
+                <p>What conversation are you preparing for? Who are you talking to and what's the context?</p>
+                
+                <div class="input-methods">
+                    <div class="voice-input">
+                        <button id="voiceBtn" class="voice-btn">
+                            <span class="mic-icon">🎤</span>
+                            <span class="voice-text">Speak your situation</span>
+                        </button>
+                        <div id="voiceStatus" class="voice-status hidden">
+                            <span class="pulse">🔴</span> Listening...
+                        </div>
                     </div>
-                    <audio id="audioPlayback" controls class="hidden"></audio>
+                    
+                    <div class="text-divider">
+                        <span>or</span>
+                    </div>
+                    
+                    <div class="text-input">
+                        <textarea id="situationInput" placeholder="Type your situation here... 
+
+For example:
+• I need to ask my boss for a raise
+• My partner and I keep arguing about money
+• I want to apologize to my friend but don't know how
+• I need to give difficult feedback to a team member"></textarea>
+                        <button id="analyzeBtn" class="analyze-btn">
+                            ✨ Get Advice
+                        </button>
+                    </div>
                 </div>
             </section>
 
-            <!-- Photo Capture -->
-            <section class="input-section">
-                <h2>📸 Take a Photo</h2>
-                <div class="photo-controls">
-                    <button id="cameraBtn" class="camera-btn">Open Camera</button>
-                    <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
-                    <div id="photoPreview" class="photo-preview hidden"></div>
+            <!-- Conversation Analysis -->
+            <section class="analysis-section hidden" id="analysisSection">
+                <div class="analysis-header">
+                    <button id="backBtn" class="back-btn">← Back</button>
+                    <h3>Conversation Strategy</h3>
+                </div>
+                
+                <div class="advice-content" id="adviceContent">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="practiceBtn" class="practice-btn">
+                        🎭 Practice This Conversation
+                    </button>
+                    <button id="saveAdviceBtn" class="save-btn">
+                        💾 Save This Advice
+                    </button>
+                    <button id="newSituationBtn" class="new-btn">
+                        🆕 New Situation
+                    </button>
                 </div>
             </section>
 
-            <!-- File Upload -->
-            <section class="input-section">
-                <h2>📎 Upload Files</h2>
-                <div class="upload-area" id="uploadArea">
-                    <p>Drag & drop files here or click to browse</p>
-                    <input type="file" id="fileInput" multiple>
+            <!-- Practice Mode -->
+            <section class="practice-section hidden" id="practiceSection">
+                <div class="practice-header">
+                    <button id="backToPlanBtn" class="back-btn">← Back to Plan</button>
+                    <h3>Practice Session</h3>
                 </div>
-                <div id="fileList" class="file-list"></div>
-            </section>
-
-            <!-- Tags and Metadata -->
-            <section class="input-section">
-                <h2>🏷️ Add Context</h2>
-                <input type="text" id="tagsInput" placeholder="Add tags (comma separated): family, vacation, memories...">
-                <input type="text" id="titleInput" placeholder="Give this memory a title...">
-            </section>
-
-            <!-- Submit -->
-            <section class="submit-section">
-                <button id="submitBtn" class="submit-btn">
-                    💾 Save Memory
-                </button>
+                
+                <div class="practice-content">
+                    <div class="scenario-setup" id="scenarioSetup">
+                        <!-- Practice scenario will be set up here -->
+                    </div>
+                    
+                    <div class="practice-controls">
+                        <button id="startPracticeBtn" class="start-practice-btn">
+                            🎬 Start Role Play
+                        </button>
+                    </div>
+                </div>
             </section>
         </main>
+
+        <!-- Navigation -->
+        <nav class="bottom-nav">
+            <button id="coachTab" class="nav-btn active">
+                <span>💬</span>
+                <span>Coach</span>
+            </button>
+            <button id="memoryTab" class="nav-btn">
+                <span>🧠</span>
+                <span>Memories</span>
+            </button>
+            <button id="historyTab" class="nav-btn">
+                <span>📚</span>
+                <span>History</span>
+            </button>
+        </nav>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Analyzing your situation...</p>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication before loading main app
+        async function checkAuthentication() {
+            try {
+                const response = await fetch('/api/security/status');
+                const data = await response.json();
+                
+                if (!data.success || !data.status.setup_complete || !data.status.authenticated) {
+                    // Redirect to authentication page
+                    window.location.href = '/auth.html';
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/auth.html';
+                return false;
+            }
+        }
+        
+        // Check auth on page load
+        checkAuthentication().then(authenticated => {
+            if (authenticated) {
+                // Load the main app script
+                const script = document.createElement('script');
+                script.src = 'coach-script.js';
+                document.head.appendChild(script);
+            }
+        });
+    </script>
 </body>
 </html>

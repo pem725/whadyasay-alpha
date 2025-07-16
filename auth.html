@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Authentication - What Do You Say?</title>
+    <link rel="stylesheet" href="coach-styles.css">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .auth-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .security-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .auth-form {
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+        
+        .auth-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+        
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .auth-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .setup-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        }
+        
+        .security-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .security-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .security-status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .status-secure {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .key-rotation {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .rotate-btn {
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>🔐 Secure Access</h1>
+            <div class="security-badge">End-to-End Encrypted</div>
+            <p>Your personal conversation data is encrypted and only you have the key</p>
+        </div>
+
+        <!-- Authentication Form -->
+        <div id="authForm" class="auth-form">
+            <div class="form-group">
+                <label for="masterPassword">Master Password</label>
+                <input type="password" id="masterPassword" placeholder="Enter your master password">
+            </div>
+            
+            <button id="authenticateBtn" class="auth-btn">
+                🔓 Unlock My Data
+            </button>
+            
+            <button id="setupBtn" class="auth-btn setup-btn">
+                🆕 First Time Setup
+            </button>
+        </div>
+
+        <!-- Security Status -->
+        <div id="securityStatus" class="security-status hidden">
+            <div id="statusContent"></div>
+            <div class="key-rotation">
+                <button id="rotateKeysBtn" class="rotate-btn">
+                    🔄 Rotate Encryption Keys
+                </button>
+            </div>
+        </div>
+
+        <!-- Security Information -->
+        <div class="security-info">
+            <h3>🛡️ Your Privacy is Protected</h3>
+            <ul>
+                <li><strong>Local Storage:</strong> All data stays on your device</li>
+                <li><strong>Strong Encryption:</strong> Military-grade AES encryption</li>
+                <li><strong>Your Keys:</strong> Only you control the encryption keys</li>
+                <li><strong>No Cloud:</strong> No data sent to external servers</li>
+                <li><strong>Monthly Rotation:</strong> Keys can be rotated for extra security</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p id="loadingMessage">Authenticating...</p>
+        </div>
+    </div>
+
+    <script>
+        class AuthenticationManager {
+            constructor() {
+                this.authenticated = false;
+                this.initializeElements();
+                this.bindEvents();
+                this.checkSecurityStatus();
+            }
+
+            initializeElements() {
+                this.masterPasswordInput = document.getElementById('masterPassword');
+                this.authenticateBtn = document.getElementById('authenticateBtn');
+                this.setupBtn = document.getElementById('setupBtn');
+                this.securityStatus = document.getElementById('securityStatus');
+                this.statusContent = document.getElementById('statusContent');
+                this.rotateKeysBtn = document.getElementById('rotateKeysBtn');
+                this.loadingOverlay = document.getElementById('loadingOverlay');
+                this.loadingMessage = document.getElementById('loadingMessage');
+            }
+
+            bindEvents() {
+                this.authenticateBtn.addEventListener('click', () => this.authenticate());
+                this.setupBtn.addEventListener('click', () => this.setupFirstTime());
+                this.rotateKeysBtn.addEventListener('click', () => this.rotateKeys());
+                
+                this.masterPasswordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.authenticate();
+                    }
+                });
+            }
+
+            async checkSecurityStatus() {
+                try {
+                    const response = await fetch('/api/security/status');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.updateSecurityStatus(data.status);
+                    }
+                } catch (error) {
+                    console.error('Error checking security status:', error);
+                }
+            }
+
+            async authenticate() {
+                const password = this.masterPasswordInput.value;
+                if (!password) {
+                    alert('Please enter your master password');
+                    return;
+                }
+
+                this.showLoading('Authenticating...');
+                
+                try {
+                    const response = await fetch('/api/security/authenticate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ master_password: password })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success && data.authenticated) {
+                        this.authenticated = true;
+                        this.showSuccess('Authentication successful! Redirecting...');
+                        
+                        // Store auth status temporarily
+                        sessionStorage.setItem('authenticated', 'true');
+                        
+                        // Redirect to main app
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1500);
+                        
+                    } else {
+                        this.showError(data.message || 'Authentication failed');
+                    }
+                    
+                } catch (error) {
+                    this.showError('Authentication error: ' + error.message);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            async setupFirstTime() {
+                const password = this.masterPasswordInput.value;
+                if (!password) {
+                    alert('Please enter a strong master password');
+                    return;
+                }
+
+                if (password.length < 8) {
+                    alert('Master password must be at least 8 characters long');
+                    return;
+                }
+
+                this.showLoading('Setting up encryption...');
+                
+                try {
+                    const response = await fetch('/api/security/setup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ master_password: password })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.authenticated = true;
+                        this.showSuccess('Encryption setup complete! Redirecting...');
+                        
+                        sessionStorage.setItem('authenticated', 'true');
+                        
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 2000);
+                        
+                    } else {
+                        this.showError(data.message || 'Setup failed');
+                    }
+                    
+                } catch (error) {
+                    this.showError('Setup error: ' + error.message);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            async rotateKeys() {
+                const password = this.masterPasswordInput.value;
+                if (!password) {
+                    alert('Please enter your current master password');
+                    return;
+                }
+
+                const newPassword = prompt('Enter new master password (or leave empty to keep current):');
+                
+                this.showLoading('Rotating encryption keys...');
+                
+                try {
+                    const response = await fetch('/api/security/rotate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            current_password: password,
+                            new_password: newPassword || undefined
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showSuccess('Keys rotated successfully!');
+                        this.checkSecurityStatus();
+                    } else {
+                        this.showError(data.message || 'Key rotation failed');
+                    }
+                    
+                } catch (error) {
+                    this.showError('Key rotation error: ' + error.message);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            updateSecurityStatus(status) {
+                if (!status.setup_complete) {
+                    this.statusContent.innerHTML = `
+                        <div class="status-warning">
+                            <strong>⚠️ Setup Required</strong><br>
+                            First-time encryption setup needed
+                        </div>
+                    `;
+                } else if (status.authenticated) {
+                    const daysUntilRotation = status.days_until_rotation || 'Unknown';
+                    const rotationStatus = daysUntilRotation < 7 ? 'status-warning' : 'status-secure';
+                    
+                    this.statusContent.innerHTML = `
+                        <div class="${rotationStatus}">
+                            <strong>✅ Authenticated & Secure</strong><br>
+                            Last auth: ${new Date(status.last_auth).toLocaleDateString()}<br>
+                            Key rotation due in: ${daysUntilRotation} days
+                        </div>
+                    `;
+                } else {
+                    this.statusContent.innerHTML = `
+                        <div class="status-error">
+                            <strong>🔒 Authentication Required</strong><br>
+                            Please enter your master password to access encrypted data
+                        </div>
+                    `;
+                }
+                
+                this.securityStatus.classList.remove('hidden');
+            }
+
+            showLoading(message) {
+                this.loadingMessage.textContent = message;
+                this.loadingOverlay.classList.remove('hidden');
+            }
+
+            hideLoading() {
+                this.loadingOverlay.classList.add('hidden');
+            }
+
+            showSuccess(message) {
+                // You could implement a toast notification here
+                console.log('Success:', message);
+            }
+
+            showError(message) {
+                alert('Error: ' + message);
+            }
+        }
+
+        // Initialize authentication manager
+        const authManager = new AuthenticationManager();
+
+        // Check if already authenticated
+        if (sessionStorage.getItem('authenticated') === 'true') {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

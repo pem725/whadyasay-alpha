@@ -224,7 +224,7 @@ class MemoryCapture {
         this.submitBtn.textContent = '💾 Saving...';
 
         try {
-            // Here we'll send to the MCP server
+            // Try to send to MCP server
             await this.sendToMCPServer(this.capturedData);
             
             // Success feedback
@@ -235,30 +235,153 @@ class MemoryCapture {
 
         } catch (error) {
             console.error('Error saving memory:', error);
-            alert('Error saving memory. Please try again.');
+            
+            // Check if it's a server connection error
+            if (error.message.includes('fetch') || error.message.includes('HTTP error')) {
+                alert('Unable to connect to server. Your memory has been saved locally and will sync when the server is available.');
+                // TODO: Implement local storage fallback
+                this.saveToLocalStorage(this.capturedData);
+            } else {
+                alert('Error saving memory. Please try again.');
+            }
+            
             this.submitBtn.disabled = false;
             this.submitBtn.textContent = '💾 Save Memory';
         }
     }
 
-    async sendToMCPServer(data) {
-        // For now, we'll just log the data structure
-        // Later we'll implement the actual MCP server communication
-        console.log('Memory data to be sent to MCP server:', {
-            text: data.text,
-            title: data.title,
-            tags: data.tags,
-            timestamp: data.timestamp,
-            hasAudio: !!data.audio,
-            hasPhoto: !!data.photo,
-            fileCount: data.files.length
-        });
-
-        // Simulate API call
-        return new Promise((resolve) => {
+    saveToLocalStorage(data) {
+        try {
+            // Get existing memories from localStorage
+            const existingMemories = JSON.parse(localStorage.getItem('pendingMemories') || '[]');
+            
+            // Add new memory with a temporary ID
+            const memoryWithId = {
+                ...data,
+                localId: Date.now(),
+                savedAt: new Date().toISOString(),
+                synced: false
+            };
+            
+            existingMemories.push(memoryWithId);
+            localStorage.setItem('pendingMemories', JSON.stringify(existingMemories));
+            
+            console.log('Memory saved to local storage:', memoryWithId);
+            
+            // Show success feedback
+            this.submitBtn.textContent = '✅ Saved Locally!';
             setTimeout(() => {
-                resolve({ success: true, id: Date.now() });
-            }, 1000);
+                this.resetForm();
+            }, 2000);
+            
+        } catch (error) {
+            console.error('Error saving to local storage:', error);
+            alert('Unable to save memory locally. Please try again.');
+        }
+    }
+
+    async syncPendingMemories() {
+        try {
+            const pendingMemories = JSON.parse(localStorage.getItem('pendingMemories') || '[]');
+            const unsynced = pendingMemories.filter(memory => !memory.synced);
+            
+            if (unsynced.length === 0) return;
+            
+            console.log(`Syncing ${unsynced.length} pending memories...`);
+            
+            for (const memory of unsynced) {
+                try {
+                    await this.sendToMCPServer(memory);
+                    memory.synced = true;
+                    console.log(`Synced memory: ${memory.title || 'Untitled'}`);
+                } catch (error) {
+                    console.error('Failed to sync memory:', error);
+                    break; // Stop syncing if server is still unavailable
+                }
+            }
+            
+            // Update localStorage with sync status
+            localStorage.setItem('pendingMemories', JSON.stringify(pendingMemories));
+            
+        } catch (error) {
+            console.error('Error syncing memories:', error);
+        }
+    }
+
+    async sendToMCPServer(data) {
+        try {
+            // Prepare data for MCP server
+            const memoryData = {
+                title: data.title,
+                text: data.text,
+                tags: data.tags,
+                memory_type: 'experience',
+                timestamp: data.timestamp
+            };
+
+            // Convert audio to base64 if present
+            if (data.audio) {
+                memoryData.audio_data = await this.blobToBase64(data.audio);
+            }
+
+            // Convert photo to base64 if present
+            if (data.photo) {
+                memoryData.photo_data = await this.fileToBase64(data.photo);
+            }
+
+            // Handle additional files
+            if (data.files && data.files.length > 0) {
+                memoryData.files = await Promise.all(
+                    data.files.map(async (file) => ({
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        data: await this.fileToBase64(file)
+                    }))
+                );
+            }
+
+            // Send to MCP server via bridge
+            const response = await fetch('/api/memory/store', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(memoryData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to store memory');
+            }
+
+            return result;
+
+        } catch (error) {
+            console.error('Error sending to MCP server:', error);
+            throw error;
+        }
+    }
+
+    async blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    async fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
         });
     }
 
@@ -295,7 +418,27 @@ class MemoryCapture {
         this.submitBtn.disabled = false;
         this.submitBtn.textContent = '💾 Save Memory';
     }
+
+    // Navigation functionality
+    initializeNavigation() {
+        const coachTab = document.getElementById('coachTab');
+        const memoryTab = document.getElementById('memoryTab');
+        const historyTab = document.getElementById('historyTab');
+
+        if (coachTab) {
+            coachTab.addEventListener('click', () => {
+                window.location.href = 'index.html';
+            });
+        }
+
+        if (historyTab) {
+            historyTab.addEventListener('click', () => {
+                alert('History view coming soon!');
+            });
+        }
+    }
 }
 
 // Initialize the app
 const memoryCapture = new MemoryCapture();
+memoryCapture.initializeNavigation();
