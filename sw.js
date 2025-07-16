@@ -1,5 +1,5 @@
 // Service Worker for What Do You Say? PWA
-const CACHE_NAME = 'whaddyasay-v1.0.0';
+const CACHE_NAME = 'whaddyasay-v1.0.1';
 const OFFLINE_URL = './offline.html';
 
 // Files to cache for offline functionality
