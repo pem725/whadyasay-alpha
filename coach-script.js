@@ -160,30 +160,52 @@ class ConversationCoach {
     }
 
     async getConversationAdvice(situation) {
-        // Call real MCP server via bridge
-        const response = await fetch('/api/conversation/advice', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                situation: situation,
-                context: this.detectContext(situation),
-                relationship: this.detectRelationship(situation),
-                urgency: 'medium'
-            })
-        });
+        try {
+            // Try PWA AI engine first if available
+            if (window.aiEngine && window.aiEngine.initialized) {
+                const advice = await window.aiEngine.generateAdvice(
+                    situation,
+                    this.detectContext(situation),
+                    this.detectRelationship(situation),
+                    'medium'
+                );
+                return advice;
+            }
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            // Fall back to server if online
+            if (navigator.onLine) {
+                const response = await fetch('/api/conversation/advice', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        situation: situation,
+                        context: this.detectContext(situation),
+                        relationship: this.detectRelationship(situation),
+                        urgency: 'medium'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to get advice');
+                }
+
+                return data.advice;
+            } else {
+                // Offline fallback
+                return this.generateMockAdvice(situation);
+            }
+        } catch (error) {
+            console.error('Error getting advice:', error);
+            // Final fallback to mock advice
+            return this.generateMockAdvice(situation);
         }
-
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.error || 'Failed to get advice');
-        }
-
-        return data.advice;
     }
 
     detectContext(situation) {

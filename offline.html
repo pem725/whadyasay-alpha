@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - What Do You Say?</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192x192.png" type="image/png">
+    <meta name="theme-color" content="#16213e">
+</head>
+<body>
+    <div class="container">
+        <div class="offline-message">
+            <div class="offline-icon">📱</div>
+            <h1>You're Offline</h1>
+            <p>Don't worry! What Do You Say? works offline too.</p>
+            
+            <div class="offline-features">
+                <h2>Available Offline:</h2>
+                <ul>
+                    <li>✅ Get conversation advice</li>
+                    <li>✅ Store memories securely</li>
+                    <li>✅ Search your past conversations</li>
+                    <li>✅ Access your encrypted data</li>
+                </ul>
+            </div>
+            
+            <div class="offline-actions">
+                <button onclick="goToCoach()" class="primary-btn">
+                    💬 Get Conversation Advice
+                </button>
+                <button onclick="goToMemory()" class="secondary-btn">
+                    🧠 Capture Memory
+                </button>
+                <button onclick="checkConnection()" class="secondary-btn">
+                    🔄 Check Connection
+                </button>
+            </div>
+            
+            <div class="offline-note">
+                <p><strong>Note:</strong> Your data is stored locally and encrypted. When you reconnect, everything will sync automatically.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goToCoach() {
+            window.location.href = 'coach.html';
+        }
+        
+        function goToMemory() {
+            window.location.href = 'memory.html';
+        }
+        
+        function checkConnection() {
+            if (navigator.onLine) {
+                window.location.href = '/';
+            } else {
+                alert('Still offline. Your device will automatically reconnect when internet is available.');
+            }
+        }
+        
+        // Auto-redirect when online
+        window.addEventListener('online', function() {
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

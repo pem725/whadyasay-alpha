@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Authentication - What Do You Say?</title>
     <link rel="stylesheet" href="coach-styles.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192x192.png" type="image/png">
+    <meta name="theme-color" content="#16213e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="WhaddyaSay">
+    <script src="pwa-core.js"></script>
+    <script src="crypto-manager.js"></script>
+    <script src="local-storage.js"></script>
+    <script src="ai-engine.js"></script>
     <style>
         .auth-container {
             max-width: 400px;
@@ -213,9 +223,23 @@
         class AuthenticationManager {
             constructor() {
                 this.authenticated = false;
+                this.cryptoManager = null;
                 this.initializeElements();
                 this.bindEvents();
-                this.checkSecurityStatus();
+                this.waitForPWAInit();
+            }
+
+            waitForPWAInit() {
+                // Wait for PWA components to initialize
+                const checkPWA = () => {
+                    if (window.cryptoManager) {
+                        this.cryptoManager = window.cryptoManager;
+                        this.checkSecurityStatus();
+                    } else {
+                        setTimeout(checkPWA, 100);
+                    }
+                };
+                checkPWA();
             }
 
             initializeElements() {
@@ -264,29 +288,42 @@
                 this.showLoading('Authenticating...');
                 
                 try {
-                    const response = await fetch('/api/security/authenticate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ master_password: password })
-                    });
-
-                    const data = await response.json();
-                    
-                    if (data.success && data.authenticated) {
-                        this.authenticated = true;
-                        this.showSuccess('Authentication successful! Redirecting...');
-                        
-                        // Store auth status temporarily
-                        sessionStorage.setItem('authenticated', 'true');
-                        
-                        // Redirect to main app
-                        setTimeout(() => {
-                            window.location.href = '/';
-                        }, 1500);
-                        
-                    } else {
-                        this.showError(data.message || 'Authentication failed');
+                    // Try PWA crypto manager first
+                    if (this.cryptoManager) {
+                        const success = await this.cryptoManager.authenticate(password);
+                        if (success) {
+                            this.authenticated = true;
+                            this.showSuccess('Authentication successful! Redirecting...');
+                            sessionStorage.setItem('authenticated', 'true');
+                            setTimeout(() => {
+                                window.location.href = '/';
+                            }, 1500);
+                            return;
+                        }
                     }
+
+                    // Fall back to server if online
+                    if (navigator.onLine) {
+                        const response = await fetch('/api/security/authenticate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ master_password: password })
+                        });
+
+                        const data = await response.json();
+                        
+                        if (data.success && data.authenticated) {
+                            this.authenticated = true;
+                            this.showSuccess('Authentication successful! Redirecting...');
+                            sessionStorage.setItem('authenticated', 'true');
+                            setTimeout(() => {
+                                window.location.href = '/';
+                            }, 1500);
+                            return;
+                        }
+                    }
+                    
+                    this.showError('Authentication failed');
                     
                 } catch (error) {
                     this.showError('Authentication error: ' + error.message);
@@ -310,27 +347,42 @@
                 this.showLoading('Setting up encryption...');
                 
                 try {
-                    const response = await fetch('/api/security/setup', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ master_password: password })
-                    });
-
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        this.authenticated = true;
-                        this.showSuccess('Encryption setup complete! Redirecting...');
-                        
-                        sessionStorage.setItem('authenticated', 'true');
-                        
-                        setTimeout(() => {
-                            window.location.href = '/';
-                        }, 2000);
-                        
-                    } else {
-                        this.showError(data.message || 'Setup failed');
+                    // Try PWA crypto manager first
+                    if (this.cryptoManager) {
+                        const success = await this.cryptoManager.authenticate(password, true);
+                        if (success) {
+                            this.authenticated = true;
+                            this.showSuccess('Encryption setup complete! Redirecting...');
+                            sessionStorage.setItem('authenticated', 'true');
+                            setTimeout(() => {
+                                window.location.href = '/';
+                            }, 2000);
+                            return;
+                        }
                     }
+
+                    // Fall back to server if online
+                    if (navigator.onLine) {
+                        const response = await fetch('/api/security/setup', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ master_password: password })
+                        });
+
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            this.authenticated = true;
+                            this.showSuccess('Encryption setup complete! Redirecting...');
+                            sessionStorage.setItem('authenticated', 'true');
+                            setTimeout(() => {
+                                window.location.href = '/';
+                            }, 2000);
+                            return;
+                        }
+                    }
+                    
+                    this.showError('Setup failed');
                     
                 } catch (error) {
                     this.showError('Setup error: ' + error.message);
