@@ -1,26 +1,26 @@
 // Service Worker for What Do You Say? PWA
 const CACHE_NAME = 'whaddyasay-v1.0.0';
-const OFFLINE_URL = '/offline.html';
+const OFFLINE_URL = './offline.html';
 
 // Files to cache for offline functionality
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/coach.html',
-  '/memory.html',
-  '/auth.html',
-  '/offline.html',
-  '/styles.css',
-  '/coach-styles.css',
-  '/script.js',
-  '/coach-script.js',
-  '/pwa-core.js',
-  '/crypto-manager.js',
-  '/local-storage.js',
-  '/ai-engine.js',
-  '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  './',
+  './index.html',
+  './coach.html',
+  './memory.html',
+  './auth.html',
+  './offline.html',
+  './styles.css',
+  './coach-styles.css',
+  './script.js',
+  './coach-script.js',
+  './pwa-core.js',
+  './crypto-manager.js',
+  './local-storage.js',
+  './ai-engine.js',
+  './manifest.json',
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png'
 ];
 
 // Install event - cache resources

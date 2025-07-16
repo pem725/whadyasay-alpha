@@ -148,7 +148,7 @@ For example:
                     const data = await response.json();
                     
                     if (!data.success || !data.status.setup_complete || !data.status.authenticated) {
-                        window.location.href = '/auth.html';
+                        window.location.href = 'auth.html';
                         return false;
                     }
                     return true;

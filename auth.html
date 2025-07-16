@@ -296,7 +296,7 @@
                             this.showSuccess('Authentication successful! Redirecting...');
                             sessionStorage.setItem('authenticated', 'true');
                             setTimeout(() => {
-                                window.location.href = '/';
+                                window.location.href = 'index.html';
                             }, 1500);
                             return;
                         }
@@ -317,7 +317,7 @@
                             this.showSuccess('Authentication successful! Redirecting...');
                             sessionStorage.setItem('authenticated', 'true');
                             setTimeout(() => {
-                                window.location.href = '/';
+                                window.location.href = 'index.html';
                             }, 1500);
                             return;
                         }
@@ -355,7 +355,7 @@
                             this.showSuccess('Encryption setup complete! Redirecting...');
                             sessionStorage.setItem('authenticated', 'true');
                             setTimeout(() => {
-                                window.location.href = '/';
+                                window.location.href = 'index.html';
                             }, 2000);
                             return;
                         }
@@ -376,7 +376,7 @@
                             this.showSuccess('Encryption setup complete! Redirecting...');
                             sessionStorage.setItem('authenticated', 'true');
                             setTimeout(() => {
-                                window.location.href = '/';
+                                window.location.href = 'index.html';
                             }, 2000);
                             return;
                         }
@@ -483,7 +483,7 @@
 
         // Check if already authenticated
         if (sessionStorage.getItem('authenticated') === 'true') {
-            window.location.href = '/';
+            window.location.href = 'index.html';
         }
     </script>
 </body>
