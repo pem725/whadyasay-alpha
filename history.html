@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - What Do You Say?</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192x192.png" type="image/png">
+    <meta name="theme-color" content="#16213e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="WhaddyaSay">
+    <script src="pwa-core.js"></script>
+    <script src="crypto-manager.js"></script>
+    <script src="local-storage.js"></script>
+    <script src="ai-engine.js"></script>
+    <style>
+        .history-container {
+            padding: 20px 0;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+
+        .filter-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 4px;
+        }
+
+        .filter-tab {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-tab.active {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .history-item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #4facfe;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .memory-item {
+            border-left-color: #28a745;
+        }
+
+        .conversation-item {
+            border-left-color: #ffc107;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .item-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .item-meta {
+            font-size: 12px;
+            color: #888;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .item-content {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .item-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .item-attachments {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .attachment {
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn {
+            background: #007bff;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .export-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .stats-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .export-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .export-all-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Your History</h1>
+            <p>All your memories and conversations</p>
+        </header>
+
+        <main class="history-container">
+            <!-- Statistics -->
+            <div class="stats-bar">
+                <div class="stat">
+                    <div class="stat-number" id="memoryCount">0</div>
+                    <div class="stat-label">Memories</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="conversationCount">0</div>
+                    <div class="stat-label">Conversations</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="totalDays">0</div>
+                    <div class="stat-label">Days Active</div>
+                </div>
+            </div>
+
+            <!-- Export Section -->
+            <div class="export-section">
+                <h3>📤 Export Your Data</h3>
+                <p>Download your data for backup or transfer</p>
+                <div class="export-buttons">
+                    <button id="exportJsonBtn" class="export-all-btn">
+                        💾 Export as JSON
+                    </button>
+                    <button id="exportCsvBtn" class="export-all-btn">
+                        📊 Export as CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search your memories and conversations...">
+                <span class="search-icon">🔍</span>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">All</button>
+                <button class="filter-tab" data-filter="memories">Memories</button>
+                <button class="filter-tab" data-filter="conversations">Conversations</button>
+            </div>
+
+            <!-- History List -->
+            <div class="history-list" id="historyList">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state hidden" id="emptyState">
+                <h3>📭 No history yet</h3>
+                <p>Start capturing memories or having conversations to see them here!</p>
+            </div>
+        </main>
+
+        <!-- Navigation -->
+        <nav class="bottom-nav">
+            <button id="coachTab" class="nav-btn">
+                <span>💬</span>
+                <span>Coach</span>
+            </button>
+            <button id="memoryTab" class="nav-btn">
+                <span>🧠</span>
+                <span>Memories</span>
+            </button>
+            <button id="historyTab" class="nav-btn active">
+                <span>📚</span>
+                <span>History</span>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        // Simplified authentication check for GitHub Pages
+        async function checkAuthentication() {
+            try {
+                // Check session storage first (set by auth.html)
+                const sessionAuth = sessionStorage.getItem('whaddyasay_authenticated');
+                if (sessionAuth === 'true') {
+                    console.log('✅ Session authenticated');
+                    return true;
+                }
+
+                // Check if PWA crypto manager is available and authenticated
+                if (window.cryptoManager && window.cryptoManager.authenticated) {
+                    console.log('✅ PWA crypto manager authenticated');
+                    return true;
+                }
+
+                // No valid authentication found - redirect to auth
+                console.log('❌ No authentication found, redirecting to auth.html');
+                window.location.href = 'auth.html';
+                return false;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = 'auth.html';
+                return false;
+            }
+        }
+        
+        // Wait for PWA initialization then check auth
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                checkAuthentication().then(authenticated => {
+                    if (authenticated) {
+                        // Load the main app script
+                        const script = document.createElement('script');
+                        script.src = 'history-script.js';
+                        document.head.appendChild(script);
+                    }
+                });
+            }, 1000); // Give PWA time to initialize
+        });
+    </script>
+</body>
+</html>

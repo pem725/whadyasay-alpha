@@ -408,6 +408,215 @@ header p {
     to { opacity: 1; transform: translateX(0); }
 }
 
+/* Practice Mode Styles */
+.scenario-info {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border-left: 4px solid #ffc107;
+}
+
+.scenario-info h4 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.scenario-info p {
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.practice-tips {
+    background: #e3f2fd;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border-left: 4px solid #2196f3;
+}
+
+.practice-tips h5 {
+    color: #1976d2;
+    margin-bottom: 10px;
+}
+
+.practice-tips ul {
+    list-style: none;
+    padding: 0;
+}
+
+.practice-tips li {
+    background: rgba(33, 150, 243, 0.1);
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.practice-area {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.practice-area h5 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+#practiceInput {
+    width: 100%;
+    min-height: 120px;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    resize: vertical;
+    margin-bottom: 15px;
+}
+
+#practiceInput:focus {
+    outline: none;
+    border-color: #4facfe;
+}
+
+.practice-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.voice-practice-btn,
+.feedback-btn,
+.try-again-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.voice-practice-btn {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    color: white;
+}
+
+.voice-practice-btn.recording {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    animation: pulse 1.5s infinite;
+}
+
+.feedback-btn {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+}
+
+.try-again-btn {
+    background: linear-gradient(135deg, #ffc107, #ffb300);
+    color: white;
+}
+
+.voice-practice-btn:hover,
+.feedback-btn:hover,
+.try-again-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.practice-status {
+    background: #fff3cd;
+    color: #856404;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ffeaa7;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.practice-feedback {
+    background: #f8f9fa;
+    border: 2px solid #28a745;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 15px;
+}
+
+.practice-feedback h5 {
+    color: #28a745;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.feedback-score {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    margin: 15px 0;
+    padding: 15px;
+    background: rgba(40, 167, 69, 0.1);
+    border-radius: 10px;
+}
+
+.feedback-section {
+    margin-bottom: 15px;
+}
+
+.feedback-section h6 {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.feedback-section.strengths h6 {
+    color: #28a745;
+}
+
+.feedback-section.improvements h6 {
+    color: #ffc107;
+}
+
+.feedback-section.suggestions h6 {
+    color: #17a2b8;
+}
+
+.feedback-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.feedback-section li {
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.feedback-section.strengths li {
+    background: rgba(40, 167, 69, 0.1);
+    border-left: 3px solid #28a745;
+}
+
+.feedback-section.improvements li {
+    background: rgba(255, 193, 7, 0.1);
+    border-left: 3px solid #ffc107;
+}
+
+.feedback-section.suggestions li {
+    background: rgba(23, 162, 184, 0.1);
+    border-left: 3px solid #17a2b8;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 480px) {
     body {
@@ -429,5 +638,15 @@ header p {
     
     .action-buttons {
         gap: 10px;
+    }
+    
+    .practice-buttons {
+        flex-direction: column;
+    }
+    
+    .voice-practice-btn,
+    .feedback-btn,
+    .try-again-btn {
+        width: 100%;
     }
 }

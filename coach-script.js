@@ -3,6 +3,7 @@ class ConversationCoach {
         this.mediaRecorder = null;
         this.audioChunks = [];
         this.isListening = false;
+        this.isPracticingVoice = false;
         this.currentSituation = '';
         this.currentAdvice = null;
         
@@ -398,30 +399,292 @@ class ConversationCoach {
     }
 
     startPracticeMode() {
-        // TODO: Implement practice mode
-        alert('Practice mode coming soon! This will let you role-play the conversation with AI.');
+        if (!this.currentAdvice || !this.currentSituation) {
+            alert('Please get advice for a situation first.');
+            return;
+        }
+
+        this.setupPracticeScenario();
+        this.showPracticeSection();
+    }
+
+    setupPracticeScenario() {
+        const scenarioSetup = document.getElementById('scenarioSetup');
+        const practiceControls = document.querySelector('.practice-controls');
+        
+        scenarioSetup.innerHTML = `
+            <div class="scenario-info">
+                <h4>🎭 Practice Scenario</h4>
+                <p><strong>Situation:</strong> ${this.currentSituation}</p>
+                <p><strong>Context:</strong> ${this.detectContext(this.currentSituation)}</p>
+                <p><strong>Relationship:</strong> ${this.detectRelationship(this.currentSituation)}</p>
+            </div>
+            
+            <div class="practice-tips">
+                <h5>💡 Key Points to Practice</h5>
+                <ul>
+                    ${(this.currentAdvice.key_points || this.currentAdvice.keyPoints || []).map(point => `<li>${point}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <div class="practice-area">
+                <h5>🎤 Practice Your Approach</h5>
+                <textarea id="practiceInput" placeholder="Start typing what you would say in this situation, or use the voice practice button below..."></textarea>
+                
+                <div class="practice-buttons">
+                    <button id="voicePracticeBtn" class="voice-practice-btn">
+                        🎤 Voice Practice
+                    </button>
+                    <button id="getFeedbackBtn" class="feedback-btn">
+                        💭 Get Feedback
+                    </button>
+                    <button id="tryAgainBtn" class="try-again-btn">
+                        🔄 Try Again
+                    </button>
+                </div>
+                
+                <div id="practiceStatus" class="practice-status hidden">
+                    <span class="pulse">🔴</span> Recording your practice...
+                </div>
+                
+                <div id="practiceFeedback" class="practice-feedback hidden">
+                    <!-- Feedback will be displayed here -->
+                </div>
+            </div>
+        `;
+        
+        // Bind practice mode events
+        this.bindPracticeEvents();
+    }
+
+    bindPracticeEvents() {
+        const voicePracticeBtn = document.getElementById('voicePracticeBtn');
+        const getFeedbackBtn = document.getElementById('getFeedbackBtn');
+        const tryAgainBtn = document.getElementById('tryAgainBtn');
+        const practiceInput = document.getElementById('practiceInput');
+        
+        if (voicePracticeBtn) {
+            voicePracticeBtn.addEventListener('click', () => this.toggleVoicePractice());
+        }
+        
+        if (getFeedbackBtn) {
+            getFeedbackBtn.addEventListener('click', () => this.provideFeedback());
+        }
+        
+        if (tryAgainBtn) {
+            tryAgainBtn.addEventListener('click', () => this.resetPractice());
+        }
+    }
+
+    toggleVoicePractice() {
+        const voicePracticeBtn = document.getElementById('voicePracticeBtn');
+        const practiceStatus = document.getElementById('practiceStatus');
+        
+        if (!this.isPracticingVoice) {
+            this.startVoicePractice();
+        } else {
+            this.stopVoicePractice();
+        }
+    }
+
+    startVoicePractice() {
+        if (this.recognition) {
+            try {
+                this.recognition.start();
+                this.isPracticingVoice = true;
+                
+                const voicePracticeBtn = document.getElementById('voicePracticeBtn');
+                const practiceStatus = document.getElementById('practiceStatus');
+                
+                voicePracticeBtn.textContent = '⏹️ Stop Recording';
+                voicePracticeBtn.classList.add('recording');
+                practiceStatus.classList.remove('hidden');
+                
+                console.log('🎤 Voice practice started');
+            } catch (error) {
+                console.error('Error starting voice practice:', error);
+                alert('Could not access microphone. Please check permissions.');
+            }
+        } else {
+            alert('Speech recognition not supported in this browser.');
+        }
+    }
+
+    stopVoicePractice() {
+        if (this.recognition && this.isPracticingVoice) {
+            this.recognition.stop();
+        }
+        
+        this.isPracticingVoice = false;
+        
+        const voicePracticeBtn = document.getElementById('voicePracticeBtn');
+        const practiceStatus = document.getElementById('practiceStatus');
+        
+        if (voicePracticeBtn) {
+            voicePracticeBtn.textContent = '🎤 Voice Practice';
+            voicePracticeBtn.classList.remove('recording');
+        }
+        
+        if (practiceStatus) {
+            practiceStatus.classList.add('hidden');
+        }
+        
+        console.log('🎤 Voice practice stopped');
+    }
+
+    async provideFeedback() {
+        const practiceInput = document.getElementById('practiceInput');
+        const practiceFeedback = document.getElementById('practiceFeedback');
+        
+        const practiceText = practiceInput.value.trim();
+        if (!practiceText) {
+            alert('Please enter or speak what you would say first.');
+            return;
+        }
+        
+        this.showLoading('Analyzing your practice...');
+        
+        try {
+            const feedback = await this.generatePracticeFeedback(practiceText);
+            this.displayPracticeFeedback(feedback);
+            practiceFeedback.classList.remove('hidden');
+        } catch (error) {
+            console.error('Error generating feedback:', error);
+            alert('Error generating feedback. Please try again.');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async generatePracticeFeedback(practiceText) {
+        // Analyze the practice text against the advice
+        const keyPoints = this.currentAdvice.key_points || this.currentAdvice.keyPoints || [];
+        const pitfalls = this.currentAdvice.pitfalls || [];
+        const phrases = this.currentAdvice.helpful_phrases || this.currentAdvice.phrases || [];
+        
+        const feedback = {
+            strengths: [],
+            improvements: [],
+            suggestions: [],
+            score: 0
+        };
+        
+        // Simple analysis based on keywords and patterns
+        let score = 50; // Base score
+        
+        // Check for positive elements
+        if (practiceText.toLowerCase().includes('understand')) {
+            feedback.strengths.push('Shows empathy by expressing understanding');
+            score += 10;
+        }
+        
+        if (practiceText.toLowerCase().includes('i feel') || practiceText.toLowerCase().includes('i think')) {
+            feedback.strengths.push('Uses "I" statements effectively');
+            score += 10;
+        }
+        
+        if (practiceText.toLowerCase().includes('how') || practiceText.toLowerCase().includes('what')) {
+            feedback.strengths.push('Asks questions to engage the other person');
+            score += 10;
+        }
+        
+        // Check for potential issues
+        if (practiceText.toLowerCase().includes('you always') || practiceText.toLowerCase().includes('you never')) {
+            feedback.improvements.push('Avoid absolute statements like "always" or "never"');
+            score -= 10;
+        }
+        
+        if (practiceText.toLowerCase().includes('but')) {
+            feedback.improvements.push('Consider replacing "but" with "and" to sound less dismissive');
+            score -= 5;
+        }
+        
+        // Generate suggestions
+        feedback.suggestions = [
+            'Try incorporating more of the helpful phrases from your advice',
+            'Practice speaking slowly and clearly',
+            'Make eye contact and use open body language'
+        ];
+        
+        feedback.score = Math.max(0, Math.min(100, score));
+        
+        return feedback;
+    }
+
+    displayPracticeFeedback(feedback) {
+        const practiceFeedback = document.getElementById('practiceFeedback');
+        
+        const scoreColor = feedback.score >= 80 ? '#28a745' : feedback.score >= 60 ? '#ffc107' : '#dc3545';
+        
+        practiceFeedback.innerHTML = `
+            <h5>📊 Practice Feedback</h5>
+            
+            <div class="feedback-score" style="color: ${scoreColor}; font-size: 24px; font-weight: bold; text-align: center; margin: 15px 0;">
+                ${feedback.score}/100
+            </div>
+            
+            ${feedback.strengths.length > 0 ? `
+                <div class="feedback-section strengths">
+                    <h6>✅ Strengths</h6>
+                    <ul>
+                        ${feedback.strengths.map(strength => `<li>${strength}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+            
+            ${feedback.improvements.length > 0 ? `
+                <div class="feedback-section improvements">
+                    <h6>🔧 Areas for Improvement</h6>
+                    <ul>
+                        ${feedback.improvements.map(improvement => `<li>${improvement}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+            
+            <div class="feedback-section suggestions">
+                <h6>💡 Suggestions</h6>
+                <ul>
+                    ${feedback.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
+    resetPractice() {
+        const practiceInput = document.getElementById('practiceInput');
+        const practiceFeedback = document.getElementById('practiceFeedback');
+        
+        if (practiceInput) {
+            practiceInput.value = '';
+        }
+        
+        if (practiceFeedback) {
+            practiceFeedback.classList.add('hidden');
+        }
+        
+        this.stopVoicePractice();
     }
 
     async saveAdvice() {
         if (!this.currentAdvice) return;
 
         try {
-            // TODO: Save to MCP server
-            const savedData = {
+            const conversationData = {
+                id: Date.now(),
                 situation: this.currentSituation,
                 advice: this.currentAdvice,
-                timestamp: new Date().toISOString(),
-                type: 'conversation_advice'
+                created_at: new Date().toISOString(),
+                type: 'conversation_advice',
+                context: this.detectContext(this.currentSituation),
+                relationship: this.detectRelationship(this.currentSituation)
             };
 
-            console.log('Saving advice to MCP server:', savedData);
-            
-            // Simulate save
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Save to local storage
+            await this.saveConversationLocally(conversationData);
             
             // Show success feedback
             const originalText = this.saveAdviceBtn.textContent;
-            this.saveAdviceBtn.textContent = '✅ Saved!';
+            this.saveAdviceBtn.textContent = '✅ Saved Locally!';
             this.saveAdviceBtn.disabled = true;
             
             setTimeout(() => {
@@ -457,8 +720,7 @@ class ConversationCoach {
                 break;
             case 'history':
                 this.historyTab.classList.add('active');
-                // TODO: Show conversation history
-                alert('History view coming soon!');
+                window.location.href = 'history.html';
                 break;
         }
     }
@@ -470,6 +732,44 @@ class ConversationCoach {
 
     hideLoading() {
         this.loadingOverlay.classList.add('hidden');
+    }
+
+    async saveConversationLocally(conversationData) {
+        try {
+            // Use PWA local storage if available for encryption
+            if (window.localStorage && window.cryptoManager) {
+                const conversationId = await window.localStorage.storeConversation(conversationData);
+                console.log('✅ Conversation saved to encrypted local storage with ID:', conversationId);
+                return conversationId;
+            } else {
+                // Fallback to browser localStorage (unencrypted)
+                const existingConversations = JSON.parse(localStorage.getItem('whaddyasay_conversations') || '[]');
+                
+                const conversationWithId = {
+                    ...conversationData,
+                    encrypted: false
+                };
+                
+                existingConversations.push(conversationWithId);
+                localStorage.setItem('whaddyasay_conversations', JSON.stringify(existingConversations));
+                
+                console.log('✅ Conversation saved to browser localStorage:', conversationWithId.id);
+                return conversationWithId.id;
+            }
+        } catch (error) {
+            console.error('❌ Error saving conversation to local storage:', error);
+            throw error;
+        }
+    }
+
+    getStoredConversations() {
+        try {
+            const conversations = JSON.parse(localStorage.getItem('whaddyasay_conversations') || '[]');
+            return conversations.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        } catch (error) {
+            console.error('Error loading conversations:', error);
+            return [];
+        }
     }
 }
 
