@@ -10,6 +10,7 @@ class ConversationCoach {
         this.initializeElements();
         this.bindEvents();
         this.initializeSpeechRecognition();
+        this.initializeAIStatus();
     }
 
     initializeElements() {
@@ -41,6 +42,17 @@ class ConversationCoach {
         this.coachTab = document.getElementById('coachTab');
         this.memoryTab = document.getElementById('memoryTab');
         this.historyTab = document.getElementById('historyTab');
+        
+        // AI Status elements
+        this.aiStatus = document.getElementById('aiStatus');
+        this.aiIndicator = document.getElementById('aiIndicator');
+        this.aiStatusText = document.getElementById('aiStatusText');
+        this.aiSettingsBtn = document.getElementById('aiSettingsBtn');
+        this.aiSettingsModal = document.getElementById('aiSettingsModal');
+        this.closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        this.refreshModelsBtn = document.getElementById('refreshModelsBtn');
+        this.saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        this.allowCloudAPI = document.getElementById('allowCloudAPI');
     }
 
     bindEvents() {
@@ -68,6 +80,29 @@ class ConversationCoach {
         this.coachTab.addEventListener('click', () => this.switchTab('coach'));
         this.memoryTab.addEventListener('click', () => this.switchTab('memory'));
         this.historyTab.addEventListener('click', () => this.switchTab('history'));
+        
+        // AI Settings modal
+        if (this.aiSettingsBtn) {
+            this.aiSettingsBtn.addEventListener('click', () => this.showAISettings());
+        }
+        if (this.closeSettingsBtn) {
+            this.closeSettingsBtn.addEventListener('click', () => this.hideAISettings());
+        }
+        if (this.refreshModelsBtn) {
+            this.refreshModelsBtn.addEventListener('click', () => this.refreshAIModels());
+        }
+        if (this.saveSettingsBtn) {
+            this.saveSettingsBtn.addEventListener('click', () => this.saveAISettings());
+        }
+        
+        // Close modal on overlay click
+        if (this.aiSettingsModal) {
+            this.aiSettingsModal.addEventListener('click', (e) => {
+                if (e.target === this.aiSettingsModal) {
+                    this.hideAISettings();
+                }
+            });
+        }
     }
 
     initializeSpeechRecognition() {
@@ -775,6 +810,205 @@ class ConversationCoach {
 
     hideLoading() {
         this.loadingOverlay.classList.add('hidden');
+    }
+
+    /**
+     * Initialize AI Status Display
+     */
+    async initializeAIStatus() {
+        try {
+            // Wait for AI engine to initialize
+            setTimeout(async () => {
+                await this.updateAIStatus();
+            }, 2000); // Give time for AI engine initialization
+            
+        } catch (error) {
+            console.error('Error initializing AI status:', error);
+            this.updateAIStatusDisplay('❌', 'AI Error', 'template');
+        }
+    }
+
+    /**
+     * Update AI status display
+     */
+    async updateAIStatus() {
+        if (!window.aiEngine) {
+            this.updateAIStatusDisplay('⚠️', 'AI Initializing...', 'template');
+            return;
+        }
+
+        try {
+            const status = window.aiEngine.getLLMStatus();
+            
+            if (status.available && status.model_type === 'local') {
+                this.updateAIStatusDisplay('🤖', `Local AI: ${status.current_model?.split(':')[1] || 'Active'}`, 'local');
+            } else if (status.available && status.model_type === 'cloud') {
+                this.updateAIStatusDisplay('☁️', `Cloud AI: ${status.current_model?.split(':')[0] || 'Active'}`, 'cloud');
+            } else {
+                this.updateAIStatusDisplay('📚', 'Enhanced Templates', 'template');
+            }
+        } catch (error) {
+            console.error('Error updating AI status:', error);
+            this.updateAIStatusDisplay('📚', 'Template System', 'template');
+        }
+    }
+
+    /**
+     * Update AI status display elements
+     */
+    updateAIStatusDisplay(indicator, text, type) {
+        if (this.aiIndicator) this.aiIndicator.textContent = indicator;
+        if (this.aiStatusText) this.aiStatusText.textContent = text;
+        
+        // Update status styling
+        if (this.aiStatus) {
+            this.aiStatus.className = `ai-status ai-${type}`;
+        }
+    }
+
+    /**
+     * Show AI Settings Modal
+     */
+    async showAISettings() {
+        if (!this.aiSettingsModal) return;
+        
+        // Update modal content
+        await this.updateAISettingsModal();
+        
+        // Show modal
+        this.aiSettingsModal.classList.remove('hidden');
+    }
+
+    /**
+     * Hide AI Settings Modal
+     */
+    hideAISettings() {
+        if (this.aiSettingsModal) {
+            this.aiSettingsModal.classList.add('hidden');
+        }
+    }
+
+    /**
+     * Update AI Settings Modal Content
+     */
+    async updateAISettingsModal() {
+        try {
+            const status = window.aiEngine ? window.aiEngine.getLLMStatus() : { available: false, models: [], current_model: null };
+            
+            // Update current status
+            const currentEngine = document.getElementById('currentEngine');
+            const currentModel = document.getElementById('currentModel');
+            const privacyLevel = document.getElementById('privacyLevel');
+            
+            if (currentEngine) {
+                currentEngine.textContent = status.available ? 
+                    (status.model_type === 'local' ? 'Local LLM' : status.model_type === 'cloud' ? 'Cloud API' : 'Template System') :
+                    'Template System';
+            }
+            
+            if (currentModel) {
+                currentModel.textContent = status.current_model || 'Enhanced Templates';
+            }
+            
+            if (privacyLevel) {
+                const privacyText = {
+                    'complete': '🔒 Complete Privacy (Local Processing)',
+                    'cloud_processed': '☁️ Cloud Processed',
+                    'template_based': '📚 Template Based (Complete Privacy)'
+                };
+                privacyLevel.textContent = privacyText[status.privacy_level] || 'Unknown';
+            }
+            
+            // Update available models
+            this.updateModelsListDisplay(status.models || []);
+            
+            // Update privacy settings
+            const preferences = JSON.parse(localStorage.getItem('whaddyasay_llm_preferences') || '{}');
+            if (this.allowCloudAPI) {
+                this.allowCloudAPI.checked = preferences.consent?.cloudAPI || false;
+            }
+            
+        } catch (error) {
+            console.error('Error updating AI settings modal:', error);
+        }
+    }
+
+    /**
+     * Update models list display
+     */
+    updateModelsListDisplay(models) {
+        const modelsList = document.getElementById('modelsList');
+        if (!modelsList) return;
+        
+        if (models.length === 0) {
+            modelsList.innerHTML = `
+                <div class="no-models">
+                    <p>No LLM models detected.</p>
+                    <p>Install <a href="https://ollama.ai" target="_blank">Ollama</a> for local AI processing.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        modelsList.innerHTML = models.map(model => `
+            <div class="model-item" data-model-id="${model.id}">
+                <div class="model-name">${model.name}</div>
+                <div class="model-type">Type: ${model.type}</div>
+                <div class="model-privacy ${model.privacy_level === 'cloud_processed' ? 'cloud' : ''}">
+                    ${model.privacy_level === 'complete_privacy' ? '🔒 Complete Privacy' : '☁️ Cloud Processed'}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Refresh AI Models
+     */
+    async refreshAIModels() {
+        if (!window.aiEngine?.llmEngine) {
+            alert('AI Engine not available for refresh');
+            return;
+        }
+        
+        try {
+            // Re-detect models
+            await window.aiEngine.llmEngine.detectLocalModels();
+            await window.aiEngine.llmEngine.selectOptimalModel();
+            
+            // Update display
+            await this.updateAIStatus();
+            await this.updateAISettingsModal();
+            
+            console.log('🔄 AI models refreshed');
+        } catch (error) {
+            console.error('Error refreshing AI models:', error);
+            alert('Error refreshing models: ' + error.message);
+        }
+    }
+
+    /**
+     * Save AI Settings
+     */
+    async saveAISettings() {
+        try {
+            const cloudConsent = this.allowCloudAPI ? this.allowCloudAPI.checked : false;
+            
+            // Save to AI engine if available
+            if (window.aiEngine) {
+                await window.aiEngine.setCloudLLMConsent(cloudConsent);
+            }
+            
+            // Update AI status
+            await this.updateAIStatus();
+            
+            // Close modal
+            this.hideAISettings();
+            
+            console.log('💾 AI settings saved');
+        } catch (error) {
+            console.error('Error saving AI settings:', error);
+            alert('Error saving settings: ' + error.message);
+        }
     }
 
     async saveConversationLocally(conversationData) {

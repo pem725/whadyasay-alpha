@@ -14,6 +14,7 @@
     <script src="pwa-core.js"></script>
     <script src="crypto-manager.js"></script>
     <script src="local-storage.js"></script>
+    <script src="llm-engine.js"></script>
     <script src="ai-engine.js"></script>
 </head>
 <body>
@@ -21,6 +22,11 @@
         <header>
             <h1>💬 What Do You Say?</h1>
             <p>Your personal conversation coach</p>
+            <div class="ai-status" id="aiStatus">
+                <span class="status-indicator" id="aiIndicator">🤖</span>
+                <span class="status-text" id="aiStatusText">Initializing AI...</span>
+                <button class="settings-btn" id="aiSettingsBtn">⚙️</button>
+            </div>
         </header>
 
         <main class="coach-interface">
@@ -127,6 +133,55 @@ For example:
         <div class="loading-content">
             <div class="spinner"></div>
             <p>Analyzing your situation...</p>
+        </div>
+    </div>
+
+    <!-- AI Settings Modal -->
+    <div class="modal-overlay hidden" id="aiSettingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🤖 AI Engine Settings</h3>
+                <button class="close-btn" id="closeSettingsBtn">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="ai-status-info">
+                    <h4>Current Status</h4>
+                    <div class="status-details" id="statusDetails">
+                        <p><strong>Engine:</strong> <span id="currentEngine">Loading...</span></p>
+                        <p><strong>Model:</strong> <span id="currentModel">Loading...</span></p>
+                        <p><strong>Privacy Level:</strong> <span id="privacyLevel">Loading...</span></p>
+                    </div>
+                </div>
+                
+                <div class="available-models" id="availableModels">
+                    <h4>Available Models</h4>
+                    <div class="models-list" id="modelsList">
+                        Loading models...
+                    </div>
+                </div>
+                
+                <div class="privacy-settings">
+                    <h4>Privacy Settings</h4>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="allowCloudAPI">
+                        <span>Allow cloud API usage for enhanced features</span>
+                        <small>Note: Your conversations will be processed by external services</small>
+                    </label>
+                </div>
+                
+                <div class="local-model-setup">
+                    <h4>Local Model Setup</h4>
+                    <p>For complete privacy, install a local LLM:</p>
+                    <ul>
+                        <li><strong>Ollama:</strong> <a href="https://ollama.ai" target="_blank">ollama.ai</a> - Easy desktop installation</li>
+                        <li><strong>Local API:</strong> Any OpenAI-compatible server on port 8080</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="refreshModelsBtn">🔄 Refresh Models</button>
+                <button class="btn-primary" id="saveSettingsBtn">💾 Save Settings</button>
+            </div>
         </div>
     </div>
 

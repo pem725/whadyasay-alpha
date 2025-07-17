@@ -15,17 +15,47 @@ class PWAAIEngine {
       challenges: [],
       preferences: {}
     };
+    this.llmEngine = null;
+    this.usingRealLLM = false;
   }
 
   /**
-   * Initialize the AI engine with local storage
+   * Initialize the AI engine with local storage and LLM support
    */
   async init(localStorage) {
     this.localStorage = localStorage;
     await this.loadUserProfile();
     await this.loadCommunicationPatterns();
+    
+    // Initialize real LLM engine
+    await this.initializeLLMEngine();
+    
     this.initialized = true;
-    console.log('✅ AI Engine initialized');
+    console.log(`✅ AI Engine initialized with ${this.usingRealLLM ? 'real LLM' : 'template system'}`);
+  }
+
+  /**
+   * Initialize the real LLM engine
+   */
+  async initializeLLMEngine() {
+    try {
+      if (window.LLMEngine) {
+        this.llmEngine = new LLMEngine();
+        await this.llmEngine.init(this.localStorage);
+        this.usingRealLLM = this.llmEngine.modelType !== 'fallback';
+        
+        if (this.usingRealLLM) {
+          console.log(`🤖 Real LLM activated: ${this.llmEngine.currentModel} (${this.llmEngine.modelType})`);
+        } else {
+          console.log('📚 Using enhanced template system (no LLM models available)');
+        }
+      } else {
+        console.log('❌ LLMEngine not available, using template fallback');
+      }
+    } catch (error) {
+      console.error('Error initializing LLM engine:', error);
+      this.usingRealLLM = false;
+    }
   }
 
   /**
@@ -37,33 +67,122 @@ class PWAAIEngine {
     }
 
     try {
-      // Analyze the situation
-      const analysis = await this.analyzeSituation(situation);
-      
-      // Get relevant patterns and memories
-      const relevantPatterns = await this.getRelevantPatterns(analysis.type, context);
+      // Get user memories for context
       const relevantMemories = await this.getRelevantMemories(situation, context);
       
-      // Generate personalized advice
-      const advice = await this.generatePersonalizedAdvice(
-        situation, 
-        analysis, 
-        context, 
-        relationship, 
-        urgency,
-        relevantPatterns,
-        relevantMemories
-      );
+      let advice;
+      
+      if (this.usingRealLLM && this.llmEngine) {
+        console.log('🤖 Generating advice with real LLM');
+        // Use real LLM for dynamic, contextual advice
+        advice = await this.llmEngine.generateAdvice(
+          situation, 
+          context, 
+          relationship, 
+          urgency, 
+          relevantMemories
+        );
+        
+        // Add LLM-specific metadata
+        advice.generated_with_llm = true;
+        advice.model_info = advice.model_info || {};
+        
+      } else {
+        console.log('📚 Generating advice with enhanced templates');
+        // Fall back to enhanced template system
+        const analysis = await this.analyzeSituation(situation);
+        const relevantPatterns = await this.getRelevantPatterns(analysis.type, context);
+        
+        advice = await this.generatePersonalizedAdvice(
+          situation, 
+          analysis, 
+          context, 
+          relationship, 
+          urgency,
+          relevantPatterns,
+          relevantMemories
+        );
+        
+        advice.generated_with_llm = false;
+        advice.model_info = {
+          type: 'template',
+          model: 'enhanced-templates',
+          privacy_level: 'complete'
+        };
+      }
 
       // Learn from this interaction
-      await this.updatePatterns(analysis, advice);
+      await this.updatePatterns({ type: advice.situation_analysis?.type || 'general' }, advice);
 
       return advice;
 
     } catch (error) {
       console.error('Error generating advice:', error);
-      throw error;
+      // Emergency fallback to simple templates
+      return await this.generateEmergencyFallbackAdvice(situation, context, relationship);
     }
+  }
+
+  /**
+   * Emergency fallback when both LLM and enhanced templates fail
+   */
+  async generateEmergencyFallbackAdvice(situation, context, relationship) {
+    console.log('🚨 Using emergency fallback advice generation');
+    
+    const situationType = this.classifySituationSimple(situation);
+    
+    return {
+      conversation_id: Date.now(),
+      situation_analysis: {
+        type: situationType,
+        context: context,
+        situation: situation,
+        complexity: 'medium',
+        confidence: 0.3
+      },
+      strategy: "Take time to listen carefully and express your thoughts clearly. Focus on understanding their perspective while being honest about your own needs.",
+      key_points: [
+        "Listen actively to understand their viewpoint",
+        "Express your thoughts clearly and respectfully",
+        "Focus on finding common ground",
+        "Be patient and stay calm",
+        "Ask questions to clarify understanding"
+      ],
+      helpful_phrases: [
+        "I understand what you're saying...",
+        "Can you help me understand your perspective?",
+        "I'd like to share my thoughts on this...",
+        "How can we work together on this?",
+        "What would help make this work for both of us?"
+      ],
+      pitfalls: [
+        "Don't interrupt or dismiss their concerns",
+        "Avoid making assumptions about their intentions",
+        "Don't let emotions override rational discussion",
+        "Avoid bringing up unrelated past issues"
+      ],
+      generated_with_llm: false,
+      model_info: {
+        type: 'emergency_fallback',
+        model: 'basic-templates',
+        privacy_level: 'complete'
+      },
+      offline: true,
+      generated_at: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Simple situation classification for emergency fallback
+   */
+  classifySituationSimple(situation) {
+    const lower = situation.toLowerCase();
+    if (lower.includes('work') || lower.includes('boss') || lower.includes('job')) return 'professional';
+    if (lower.includes('family') || lower.includes('parent')) return 'family';
+    if (lower.includes('partner') || lower.includes('relationship')) return 'romantic';
+    if (lower.includes('friend')) return 'friendship';
+    if (lower.includes('sorry') || lower.includes('apolog')) return 'apology';
+    return 'general';
   }
 
   /**
@@ -181,18 +300,26 @@ class PWAAIEngine {
   }
 
   /**
-   * Get relevant memories
+   * Get relevant memories with enhanced search
    */
   async getRelevantMemories(situation, context) {
     if (!this.localStorage) return [];
 
     try {
-      const memories = await this.localStorage.searchMemories(situation, [], null, 5);
+      const memories = await this.localStorage.searchMemories(situation, [], null, 10);
+      
+      // Enhanced memory processing for LLM context
       return memories.map(memory => ({
         content: memory.content,
+        processed_content: memory.processed_content,
         tags: memory.tags,
         memory_type: memory.memory_type,
-        timestamp: memory.timestamp
+        timestamp: memory.timestamp,
+        // Extract key information for LLM context
+        summary: memory.processed_content?.content_summary || memory.content?.substring(0, 100),
+        topics: memory.processed_content?.topics || [],
+        emotional_tone: memory.processed_content?.emotional_analysis?.sentiment || 'neutral',
+        entities: memory.processed_content?.entities || []
       }));
     } catch (error) {
       console.error('Error getting relevant memories:', error);
@@ -510,13 +637,68 @@ class PWAAIEngine {
 
   async updatePatterns(analysis, advice) {
     // Learn from the generated advice to improve future recommendations
-    // This would typically involve storing successful patterns
-    // For now, we'll just log the interaction
-    console.log('Learning from interaction:', {
-      type: analysis.type,
-      complexity: analysis.complexity,
-      advice_generated: true
-    });
+    try {
+      const pattern = {
+        situation_type: analysis.type,
+        generated_at: new Date().toISOString(),
+        used_llm: advice.generated_with_llm || false,
+        model_type: advice.model_info?.type || 'unknown',
+        success_rating: null // Will be updated when user provides feedback
+      };
+      
+      // Store pattern for future learning
+      const existingPatterns = JSON.parse(localStorage.getItem('whaddyasay_advice_patterns') || '[]');
+      existingPatterns.push(pattern);
+      
+      // Keep only last 100 patterns to prevent storage bloat
+      if (existingPatterns.length > 100) {
+        existingPatterns.splice(0, existingPatterns.length - 100);
+      }
+      
+      localStorage.setItem('whaddyasay_advice_patterns', JSON.stringify(existingPatterns));
+      
+      console.log('📊 Learning pattern stored:', {
+        type: analysis.type,
+        used_llm: advice.generated_with_llm,
+        model: advice.model_info?.model
+      });
+    } catch (error) {
+      console.error('Error updating patterns:', error);
+    }
+  }
+
+  /**
+   * Get LLM engine status and available models
+   */
+  getLLMStatus() {
+    if (!this.llmEngine) {
+      return {
+        available: false,
+        models: [],
+        current_model: null,
+        privacy_level: 'complete'
+      };
+    }
+    
+    return {
+      available: this.usingRealLLM,
+      models: this.llmEngine.getAvailableModels(),
+      current_model: this.llmEngine.currentModel,
+      model_type: this.llmEngine.modelType,
+      privacy_level: this.llmEngine.modelType === 'local' ? 'complete' : 
+                    (this.llmEngine.modelType === 'cloud' ? 'cloud_processed' : 'template_based')
+    };
+  }
+
+  /**
+   * Set user consent for cloud LLM usage
+   */
+  async setCloudLLMConsent(consent) {
+    if (this.llmEngine) {
+      await this.llmEngine.setUserConsent({ cloudAPI: consent });
+      this.usingRealLLM = this.llmEngine.modelType !== 'fallback';
+      console.log(`🔄 Cloud LLM consent ${consent ? 'granted' : 'revoked'}, using: ${this.llmEngine.currentModel}`);
+    }
   }
 
   async loadUserProfile() {
@@ -562,3 +744,11 @@ class PWAAIEngine {
 
 // Export for use in other modules
 window.PWAAIEngine = PWAAIEngine;
+
+// Load LLM Engine if not already loaded
+if (typeof window !== 'undefined' && !window.LLMEngine) {
+  const script = document.createElement('script');
+  script.src = 'llm-engine.js';
+  script.async = true;
+  document.head.appendChild(script);
+}
