@@ -205,6 +205,7 @@ class ConversationCoach {
             // Try PWA AI engine first (preferred for privacy and speed)
             if (window.aiEngine && window.aiEngine.initialized) {
                 console.log('🤖 Using local AI engine for advice generation');
+                console.log('🔍 AI Engine status:', window.aiEngine.getLLMStatus());
                 const advice = await window.aiEngine.generateAdvice(
                     situation,
                     this.detectContext(situation),
@@ -215,7 +216,12 @@ class ConversationCoach {
                 // Mark as locally generated
                 advice.source = 'local_ai';
                 advice.privacy_level = 'complete';
+                console.log('✅ Generated advice:', advice);
                 return advice;
+            } else {
+                console.log('⚠️ AI Engine not available or not initialized');
+                console.log('AI Engine exists:', !!window.aiEngine);
+                console.log('AI Engine initialized:', window.aiEngine?.initialized);
             }
 
             // Fall back to MCP server if online (enhanced features)
@@ -817,9 +823,16 @@ class ConversationCoach {
      */
     async initializeAIStatus() {
         try {
-            // Wait for AI engine to initialize
+            // Initial status
+            this.updateAIStatusDisplay('⚠️', 'AI Initializing...', 'template');
+            
+            // Wait for AI engine to initialize, then check periodically
             setTimeout(async () => {
                 await this.updateAIStatus();
+                // Check again in a few seconds in case WebLLM is loading
+                setTimeout(async () => {
+                    await this.updateAIStatus();
+                }, 5000);
             }, 2000); // Give time for AI engine initialization
             
         } catch (error) {
@@ -833,19 +846,25 @@ class ConversationCoach {
      */
     async updateAIStatus() {
         if (!window.aiEngine) {
+            console.log('⚠️ AI Engine not available yet');
             this.updateAIStatusDisplay('⚠️', 'AI Initializing...', 'template');
             return;
         }
 
         try {
             const status = window.aiEngine.getLLMStatus();
+            console.log('🔍 AI Status:', status);
             
             if (status.available && status.model_type === 'local') {
-                this.updateAIStatusDisplay('🤖', `Local AI: ${status.current_model?.split(':')[1] || 'Active'}`, 'local');
+                const modelName = status.current_model || 'Local AI';
+                this.updateAIStatusDisplay('🤖', `Local AI: ${modelName}`, 'local');
+                console.log('✅ Local AI active:', modelName);
             } else if (status.available && status.model_type === 'cloud') {
                 this.updateAIStatusDisplay('☁️', `Cloud AI: ${status.current_model?.split(':')[0] || 'Active'}`, 'cloud');
+                console.log('✅ Cloud AI active');
             } else {
                 this.updateAIStatusDisplay('📚', 'Enhanced Templates', 'template');
+                console.log('📚 Using template system, LLM not available');
             }
         } catch (error) {
             console.error('Error updating AI status:', error);
@@ -1052,11 +1071,44 @@ class ConversationCoach {
 
 // Initialize the conversation coach with onboarding
 async function initializeApp() {
+    // Initialize AI engine first
+    console.log('🤖 Initializing AI engine...');
+    if (!window.aiEngine && window.PWAAIEngine) {
+        window.aiEngine = new PWAAIEngine();
+        await window.aiEngine.init(window.localStorage);
+        console.log('✅ AI engine initialized');
+        
+        // Debug: Check AI engine status
+        const status = window.aiEngine.getLLMStatus();
+        console.log('🔍 Initial AI status:', status);
+        
+        // Test WebLLM availability
+        console.log('🔍 WebLLM availability check:');
+        console.log('- WebLLMEngine exists:', !!window.WebLLMEngine);
+        console.log('- MobileOnboarding exists:', !!window.MobileOnboarding);
+        
+        if (window.WebLLMEngine) {
+            try {
+                const support = await WebLLMEngine.checkSupport();
+                console.log('📱 WebLLM support:', support);
+            } catch (error) {
+                console.error('❌ WebLLM support check failed:', error);
+            }
+        }
+    }
+    
     // Check if onboarding should be shown
+    console.log('🔍 Should show onboarding?', MobileOnboarding.shouldShowOnboarding());
+    console.log('🔍 Onboarding completed:', localStorage.getItem('whaddyasay_onboarding_completed'));
+    console.log('🔍 Onboarding skipped:', localStorage.getItem('whaddyasay_onboarding_skipped'));
+    console.log('🔍 Selected model:', localStorage.getItem('whaddyasay_selected_model'));
+    
     if (MobileOnboarding.shouldShowOnboarding()) {
         console.log('🚀 Starting mobile onboarding flow...');
         const onboarding = new MobileOnboarding();
         await onboarding.startOnboarding();
+    } else {
+        console.log('⏭️ Onboarding skipped - user has already completed or skipped it');
     }
     
     // Initialize the conversation coach
