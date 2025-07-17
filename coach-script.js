@@ -1050,5 +1050,18 @@ class ConversationCoach {
     }
 }
 
-// Initialize the conversation coach
-const conversationCoach = new ConversationCoach();
+// Initialize the conversation coach with onboarding
+async function initializeApp() {
+    // Check if onboarding should be shown
+    if (MobileOnboarding.shouldShowOnboarding()) {
+        console.log('🚀 Starting mobile onboarding flow...');
+        const onboarding = new MobileOnboarding();
+        await onboarding.startOnboarding();
+    }
+    
+    // Initialize the conversation coach
+    window.conversationCoach = new ConversationCoach();
+}
+
+// Start the app
+initializeApp();

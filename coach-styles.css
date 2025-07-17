@@ -283,6 +283,548 @@ header p {
     background: #5a6268;
 }
 
+/* Mobile Onboarding Styles */
+.onboarding-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.onboarding-modal {
+    background: white;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.onboarding-header {
+    padding: 25px 25px 20px;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.onboarding-header h2 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.step-indicator {
+    display: flex;
+    justify-content: center;
+}
+
+.steps {
+    display: flex;
+    gap: 10px;
+}
+
+.step {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.step.active {
+    background: #4facfe;
+    color: white;
+}
+
+.onboarding-content {
+    padding: 25px;
+    min-height: 300px;
+}
+
+.onboarding-footer {
+    padding: 20px 25px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* Welcome Content */
+.welcome-content {
+    text-align: center;
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.welcome-content h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.welcome-content > p {
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+.benefits {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.benefit {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-align: left;
+}
+
+.benefit-icon {
+    font-size: 1.5rem;
+    margin-top: 2px;
+}
+
+.benefit strong {
+    color: #333;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.benefit p {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.setup-time {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* Compatibility Check */
+.checking-content {
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 1.1rem;
+}
+
+.compatibility-success {
+    text-align: center;
+}
+
+.check-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.compatibility-success h3 {
+    color: #28a745;
+    margin-bottom: 20px;
+}
+
+.device-info {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.info-item {
+    margin: 8px 0;
+    font-size: 0.9rem;
+}
+
+.recommendation {
+    background: #e3f2fd;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    color: #1976d2;
+}
+
+.privacy-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.privacy-icon {
+    font-size: 1.2rem;
+}
+
+.compatibility-error {
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.compatibility-error h3 {
+    color: #dc3545;
+    margin-bottom: 15px;
+}
+
+.fallback-info {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.fallback-info h4 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.template-benefits {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+
+/* Model Selection */
+.model-selection h3 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.models-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.model-option {
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.model-option:hover {
+    border-color: #4facfe;
+}
+
+.model-option.selected {
+    border-color: #4facfe;
+    background: #f0f8ff;
+}
+
+.model-option.recommended {
+    border-color: #ffc107;
+    background: #fffbf0;
+}
+
+.model-option.recommended.selected {
+    border-color: #4facfe;
+    background: #f0f8ff;
+}
+
+.model-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.model-header h4 {
+    margin: 0;
+    color: #333;
+}
+
+.recommended-badge {
+    background: #ffc107;
+    color: #333;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.model-info {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.model-size {
+    color: #666;
+}
+
+.model-mobile.optimized {
+    color: #28a745;
+}
+
+.model-mobile.not-optimized {
+    color: #ffc107;
+}
+
+.model-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.model-suitability .suitable {
+    color: #28a745;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.model-suitability .not-suitable {
+    color: #ffc107;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.selection-help {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.selection-help h4 {
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.selection-help p {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Download Progress */
+.download-progress {
+    text-align: center;
+}
+
+.download-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.download-progress h3 {
+    color: #333;
+    margin-bottom: 25px;
+}
+
+.progress-container {
+    margin-bottom: 25px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+    background: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4facfe, #00f2fe);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-text {
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.download-info {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.download-tips {
+    text-align: left;
+    background: #e3f2fd;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.download-tips h4 {
+    color: #1976d2;
+    margin-bottom: 10px;
+}
+
+.download-tips ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.download-tips li {
+    margin: 5px 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.download-error {
+    text-align: center;
+}
+
+.download-error .error-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.download-error h3 {
+    color: #dc3545;
+    margin-bottom: 15px;
+}
+
+.error-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Completion */
+.completion-content {
+    text-align: center;
+}
+
+.success-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.completion-content h3 {
+    color: #28a745;
+    margin-bottom: 15px;
+}
+
+.completion-content > p {
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+.next-steps {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.next-steps h4 {
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.next-steps ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.next-steps li {
+    margin: 10px 0;
+    color: #666;
+    line-height: 1.4;
+}
+
+.tip {
+    background: #e3f2fd;
+    border-radius: 10px;
+    padding: 15px;
+    color: #1976d2;
+    font-size: 0.9rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .onboarding-modal {
+        width: 98%;
+        max-height: 95vh;
+    }
+    
+    .onboarding-header,
+    .onboarding-content,
+    .onboarding-footer {
+        padding: 20px;
+    }
+    
+    .benefits {
+        gap: 12px;
+    }
+    
+    .benefit {
+        gap: 10px;
+    }
+    
+    .models-grid {
+        gap: 10px;
+    }
+    
+    .model-option {
+        padding: 12px;
+    }
+    
+    .model-info {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .onboarding-footer {
+        flex-direction: column;
+    }
+    
+    .onboarding-footer button {
+        width: 100%;
+    }
+}
+
 .coach-interface {
     flex: 1;
     padding: 20px;

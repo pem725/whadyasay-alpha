@@ -39,7 +39,36 @@ class PWAAIEngine {
    */
   async initializeLLMEngine() {
     try {
-      if (window.LLMEngine) {
+      // Try WebLLM first (for mobile)
+      if (window.WebLLMEngine) {
+        console.log('📱 Attempting to initialize WebLLM for mobile...');
+        this.llmEngine = new WebLLMEngine();
+        const initSuccess = await this.llmEngine.init();
+        
+        if (initSuccess) {
+          // Check if user has a selected model
+          const selectedModel = localStorage.getItem('whaddyasay_selected_model');
+          if (selectedModel) {
+            console.log(`🤖 Loading saved model: ${selectedModel}`);
+            try {
+              await this.llmEngine.loadModel(selectedModel);
+              this.usingRealLLM = true;
+              console.log(`✅ WebLLM activated: ${selectedModel}`);
+            } catch (modelError) {
+              console.warn('Failed to load saved model, using template fallback:', modelError);
+              this.usingRealLLM = false;
+            }
+          } else {
+            console.log('📚 WebLLM available but no model selected');
+            this.usingRealLLM = false;
+          }
+        } else {
+          console.log('❌ WebLLM initialization failed');
+          this.usingRealLLM = false;
+        }
+      } else if (window.LLMEngine) {
+        // Fall back to regular LLM engine
+        console.log('💻 Initializing desktop LLM engine...');
         this.llmEngine = new LLMEngine();
         await this.llmEngine.init(this.localStorage);
         this.usingRealLLM = this.llmEngine.modelType !== 'fallback';
@@ -50,7 +79,8 @@ class PWAAIEngine {
           console.log('📚 Using enhanced template system (no LLM models available)');
         }
       } else {
-        console.log('❌ LLMEngine not available, using template fallback');
+        console.log('❌ No LLM engines available, using template fallback');
+        this.usingRealLLM = false;
       }
     } catch (error) {
       console.error('Error initializing LLM engine:', error);
@@ -74,18 +104,44 @@ class PWAAIEngine {
       
       if (this.usingRealLLM && this.llmEngine) {
         console.log('🤖 Generating advice with real LLM');
-        // Use real LLM for dynamic, contextual advice
-        advice = await this.llmEngine.generateAdvice(
-          situation, 
-          context, 
-          relationship, 
-          urgency, 
-          relevantMemories
-        );
         
-        // Add LLM-specific metadata
-        advice.generated_with_llm = true;
-        advice.model_info = advice.model_info || {};
+        // Check if this is WebLLM engine
+        if (this.llmEngine.constructor.name === 'WebLLMEngine') {
+          // Use WebLLM's simplified interface
+          const prompt = this.buildAdvicePrompt(situation, context, relationship, urgency, relevantMemories);
+          const result = await this.llmEngine.generateAdvice(prompt);
+          
+          // Convert WebLLM response to expected format
+          advice = {
+            situation: situation,
+            analysis: result.advice,
+            strategy: result.advice,
+            keyPoints: this.extractKeyPoints(result.advice),
+            pitfalls: this.extractPitfalls(result.advice),
+            phrases: this.extractPhrases(result.advice),
+            generated_with_llm: true,
+            model_info: {
+              model: result.model,
+              model_name: result.model_name,
+              privacy_level: result.privacy_level,
+              processing_location: result.processing_location
+            }
+          };
+          
+        } else {
+          // Use regular LLM engine
+          advice = await this.llmEngine.generateAdvice(
+            situation, 
+            context, 
+            relationship, 
+            urgency, 
+            relevantMemories
+          );
+          
+          // Add LLM-specific metadata
+          advice.generated_with_llm = true;
+          advice.model_info = advice.model_info || {};
+        }
         
       } else {
         console.log('📚 Generating advice with enhanced templates');
@@ -739,6 +795,106 @@ class PWAAIEngine {
     } catch (error) {
       console.error('Error saving communication patterns:', error);
     }
+  }
+
+  /**
+   * Build advice prompt for WebLLM
+   */
+  buildAdvicePrompt(situation, context, relationship, urgency, relevantMemories) {
+    const contextInfo = context !== 'general' ? `Context: ${context}` : '';
+    const relationshipInfo = relationship ? `Relationship: ${relationship}` : '';
+    const urgencyInfo = urgency !== 'medium' ? `Urgency: ${urgency}` : '';
+    const memoriesInfo = relevantMemories.length > 0 ? `Relevant background: ${relevantMemories.slice(0, 3).map(m => m.content).join(', ')}` : '';
+    
+    return `You are a professional conversation coach. Please provide specific, actionable advice for this situation:
+
+Situation: ${situation}
+${contextInfo}
+${relationshipInfo}
+${urgencyInfo}
+${memoriesInfo}
+
+Please provide:
+1. A clear strategy for approaching this conversation
+2. 3-5 key points to focus on
+3. Potential pitfalls to avoid
+4. Helpful phrases or scripts to use
+5. Confidence-building tips
+
+Keep your response practical, empathetic, and actionable. Focus on communication techniques that lead to positive outcomes.`;
+  }
+
+  /**
+   * Extract key points from LLM response
+   */
+  extractKeyPoints(advice) {
+    const keyPointsMatch = advice.match(/key points?[:\s]*\n?(.*?)(?=\n\n|\npitfalls?|\nhelpful|$)/is);
+    if (keyPointsMatch) {
+      return keyPointsMatch[1].split('\n').filter(line => line.trim()).map(line => line.replace(/^\d+\.\s*|-\s*|\*\s*/, '').trim());
+    }
+    return ["Focus on clear, honest communication", "Listen actively to their perspective", "Stay calm and respectful throughout"];
+  }
+
+  /**
+   * Extract pitfalls from LLM response
+   */
+  extractPitfalls(advice) {
+    const pitfallsMatch = advice.match(/pitfalls?[:\s]*\n?(.*?)(?=\n\n|\nhelpful|\nconfidence|$)/is);
+    if (pitfallsMatch) {
+      return pitfallsMatch[1].split('\n').filter(line => line.trim()).map(line => line.replace(/^\d+\.\s*|-\s*|\*\s*/, '').trim());
+    }
+    return ["Don't get defensive or emotional", "Avoid interrupting or rushing", "Don't make assumptions about their response"];
+  }
+
+  /**
+   * Extract helpful phrases from LLM response
+   */
+  extractPhrases(advice) {
+    const phrasesMatch = advice.match(/(?:helpful|phrases?|scripts?)[:\s]*\n?(.*?)(?=\n\n|\nconfidence|$)/is);
+    if (phrasesMatch) {
+      return phrasesMatch[1].split('\n').filter(line => line.trim()).map(line => line.replace(/^\d+\.\s*|-\s*|\*\s*|"/, '').trim());
+    }
+    return ["I'd like to discuss something important with you", "I value your perspective on this", "How do you feel about this situation?"];
+  }
+
+  /**
+   * Get LLM status for UI display
+   */
+  getLLMStatus() {
+    if (!this.initialized) {
+      return { available: false, status: 'initializing' };
+    }
+
+    if (this.usingRealLLM && this.llmEngine) {
+      if (this.llmEngine.constructor.name === 'WebLLMEngine') {
+        return {
+          available: true,
+          model_type: 'local',
+          engine_type: 'webllm',
+          current_model: this.llmEngine.currentModel,
+          privacy_level: 'complete',
+          status: 'ready'
+        };
+      } else {
+        return {
+          available: true,
+          model_type: 'local',
+          engine_type: 'llm',
+          current_model: this.llmEngine.currentModel,
+          privacy_level: 'complete',
+          status: 'ready'
+        };
+      }
+    }
+
+    return {
+      available: false,
+      model_type: 'template',
+      engine_type: 'template',
+      current_model: 'Built-in Templates',
+      privacy_level: 'complete',
+      status: 'fallback'
+    };
   }
 }
 
