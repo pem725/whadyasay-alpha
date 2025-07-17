@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory Capture - What Do You Say?</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192x192.png" type="image/png">
+    <meta name="theme-color" content="#16213e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="WhaddyaSay">
+    <script src="pwa-core.js"></script>
+    <script src="crypto-manager.js"></script>
+    <script src="local-storage.js"></script>
+    <script src="ai-engine.js"></script>
 </head>
 <body>
     <div class="container">
@@ -88,34 +98,45 @@
     </div>
 
     <script>
-        // Check authentication before loading main app
+        // Simplified authentication check for GitHub Pages
         async function checkAuthentication() {
             try {
-                const response = await fetch('/api/security/status');
-                const data = await response.json();
-                
-                if (!data.success || !data.status.setup_complete || !data.status.authenticated) {
-                    // Redirect to authentication page
-                    window.location.href = '/auth.html';
-                    return false;
+                // Check session storage first (set by auth.html)
+                const sessionAuth = sessionStorage.getItem('whaddyasay_authenticated');
+                if (sessionAuth === 'true') {
+                    console.log('✅ Session authenticated');
+                    return true;
                 }
-                
-                return true;
+
+                // Check if PWA crypto manager is available and authenticated
+                if (window.cryptoManager && window.cryptoManager.authenticated) {
+                    console.log('✅ PWA crypto manager authenticated');
+                    return true;
+                }
+
+                // No valid authentication found - redirect to auth
+                console.log('❌ No authentication found, redirecting to auth.html');
+                window.location.href = 'auth.html';
+                return false;
             } catch (error) {
                 console.error('Auth check failed:', error);
-                window.location.href = '/auth.html';
+                window.location.href = 'auth.html';
                 return false;
             }
         }
         
-        // Check auth on page load
-        checkAuthentication().then(authenticated => {
-            if (authenticated) {
-                // Load the main app script
-                const script = document.createElement('script');
-                script.src = 'script.js';
-                document.head.appendChild(script);
-            }
+        // Wait for PWA initialization then check auth
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                checkAuthentication().then(authenticated => {
+                    if (authenticated) {
+                        // Load the main app script
+                        const script = document.createElement('script');
+                        script.src = 'script.js';
+                        document.head.appendChild(script);
+                    }
+                });
+            }, 1000); // Give PWA time to initialize
         });
     </script>
 </body>
