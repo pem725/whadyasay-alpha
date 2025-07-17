@@ -143,14 +143,19 @@ class HistoryManager {
             })));
         }
         
-        // Apply search filter
+        // Apply search filter using processed content for better search
         if (this.searchTerm) {
             items = items.filter(item => {
                 const searchText = [
                     item.title || '',
                     item.text || '',
                     item.situation || '',
-                    ...(item.tags || [])
+                    item.processed_content?.searchable_content || '',
+                    item.processed_content?.content_summary || '',
+                    ...(item.tags || []),
+                    ...(item.processed_content?.topics?.map(t => t.topic) || []),
+                    ...(item.processed_content?.entities?.map(e => e.entity) || []),
+                    ...(item.processed_content?.media_descriptions || [])
                 ].join(' ').toLowerCase();
                 
                 return searchText.includes(this.searchTerm);

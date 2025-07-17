@@ -16,6 +16,7 @@ class MemoryCapture {
         
         this.initializeElements();
         this.bindEvents();
+        this.initializeMediaProcessor();
     }
 
     initializeElements() {
@@ -245,7 +246,7 @@ class MemoryCapture {
     async saveToLocalStorage(data) {
         try {
             // Convert binary data to base64 for storage
-            const processedData = {
+            const rawData = {
                 ...data,
                 id: Date.now(),
                 created_at: new Date().toISOString()
@@ -253,21 +254,21 @@ class MemoryCapture {
 
             // Convert audio blob to base64 if present
             if (data.audio) {
-                processedData.audio_data = await this.blobToBase64(data.audio);
-                delete processedData.audio; // Remove blob reference
+                rawData.audio_data = await this.blobToBase64(data.audio);
+                delete rawData.audio; // Remove blob reference
             }
 
             // Convert photo file to base64 if present
             if (data.photo) {
-                processedData.photo_data = await this.fileToBase64(data.photo);
-                processedData.photo_name = data.photo.name;
-                processedData.photo_type = data.photo.type;
-                delete processedData.photo; // Remove file reference
+                rawData.photo_data = await this.fileToBase64(data.photo);
+                rawData.photo_name = data.photo.name;
+                rawData.photo_type = data.photo.type;
+                delete rawData.photo; // Remove file reference
             }
 
             // Convert additional files to base64 if present
             if (data.files && data.files.length > 0) {
-                processedData.files_data = await Promise.all(
+                rawData.files_data = await Promise.all(
                     data.files.map(async (file) => ({
                         name: file.name,
                         size: file.size,
@@ -275,8 +276,11 @@ class MemoryCapture {
                         data: await this.fileToBase64(file)
                     }))
                 );
-                delete processedData.files; // Remove file references
+                delete rawData.files; // Remove file references
             }
+
+            // Process media data for RAG and searchability
+            const processedData = await this.processMediaForRAG(rawData);
 
             // Use PWA local storage if available for encryption
             if (window.localStorage && window.cryptoManager) {
@@ -301,6 +305,32 @@ class MemoryCapture {
         } catch (error) {
             console.error('❌ Error saving to local storage:', error);
             throw error;
+        }
+    }
+
+    async processMediaForRAG(memoryData) {
+        try {
+            // Initialize media processor if not already done
+            if (!window.mediaProcessor) {
+                window.mediaProcessor = new MediaProcessor();
+                await window.mediaProcessor.init();
+            }
+
+            // Process the memory data to convert binary media to text
+            const processedMemory = await window.mediaProcessor.processMemoryData(memoryData);
+            
+            console.log('✅ Media processed for RAG:', {
+                originalTextLength: memoryData.text?.length || 0,
+                processedContentLength: processedMemory.processed_content?.searchable_content?.length || 0,
+                mediaItems: processedMemory.processed_content?.media_descriptions?.length || 0
+            });
+
+            return processedMemory;
+
+        } catch (error) {
+            console.error('❌ Error processing media for RAG:', error);
+            // Return original data if processing fails
+            return memoryData;
         }
     }
 
@@ -381,8 +411,7 @@ class MemoryCapture {
         this.submitBtn.textContent = '💾 Save Memory';
     }
 
-    // Navigation functionality
-    initializeNavigation() {
+    async initializeMediaProcessor() {\n        try {\n            if (!window.mediaProcessor) {\n                // Load media processor\n                const script = document.createElement('script');\n                script.src = 'media-processor.js';\n                document.head.appendChild(script);\n                \n                // Wait for script to load\n                await new Promise((resolve) => {\n                    script.onload = resolve;\n                });\n                \n                window.mediaProcessor = new MediaProcessor();\n                await window.mediaProcessor.init();\n                console.log('✅ Media processor initialized for memory capture');\n            }\n        } catch (error) {\n            console.error('❌ Error initializing media processor:', error);\n        }\n    }\n\n    // Navigation functionality\n    initializeNavigation() {
         const coachTab = document.getElementById('coachTab');
         const memoryTab = document.getElementById('memoryTab');
         const historyTab = document.getElementById('historyTab');

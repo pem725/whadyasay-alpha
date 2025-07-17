@@ -162,50 +162,93 @@ class ConversationCoach {
 
     async getConversationAdvice(situation) {
         try {
-            // Try PWA AI engine first if available
+            // Initialize AI engine if not available
+            if (!window.aiEngine) {
+                await this.initializeAIEngine();
+            }
+
+            // Try PWA AI engine first (preferred for privacy and speed)
             if (window.aiEngine && window.aiEngine.initialized) {
+                console.log('🤖 Using local AI engine for advice generation');
                 const advice = await window.aiEngine.generateAdvice(
                     situation,
                     this.detectContext(situation),
                     this.detectRelationship(situation),
                     'medium'
                 );
+                
+                // Mark as locally generated
+                advice.source = 'local_ai';
+                advice.privacy_level = 'complete';
                 return advice;
             }
 
-            // Fall back to server if online
+            // Fall back to MCP server if online (enhanced features)
             if (navigator.onLine) {
-                const response = await fetch('/api/conversation/advice', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        situation: situation,
-                        context: this.detectContext(situation),
-                        relationship: this.detectRelationship(situation),
-                        urgency: 'medium'
-                    })
-                });
+                console.log('🌐 Attempting MCP server for enhanced advice');
+                try {
+                    const response = await fetch('/api/conversation/advice', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            situation: situation,
+                            context: this.detectContext(situation),
+                            relationship: this.detectRelationship(situation),
+                            urgency: 'medium'
+                        }),
+                        timeout: 5000 // 5 second timeout
+                    });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            data.advice.source = 'mcp_server';
+                            data.advice.privacy_level = 'encrypted';
+                            console.log('✅ MCP server advice retrieved');
+                            return data.advice;
+                        }
+                    }
+                } catch (serverError) {
+                    console.warn('MCP server unavailable, using local fallback:', serverError.message);
                 }
-
-                const data = await response.json();
-                if (!data.success) {
-                    throw new Error(data.error || 'Failed to get advice');
-                }
-
-                return data.advice;
-            } else {
-                // Offline fallback
-                return this.generateMockAdvice(situation);
             }
+
+            // Final fallback to built-in advice
+            console.log('📚 Using built-in advice templates');
+            const mockAdvice = this.generateMockAdvice(situation);
+            mockAdvice.source = 'builtin';
+            mockAdvice.privacy_level = 'complete';
+            return mockAdvice;
+
         } catch (error) {
             console.error('Error getting advice:', error);
-            // Final fallback to mock advice
-            return this.generateMockAdvice(situation);
+            // Emergency fallback
+            const emergencyAdvice = this.generateMockAdvice(situation);
+            emergencyAdvice.source = 'emergency_fallback';
+            emergencyAdvice.privacy_level = 'complete';
+            emergencyAdvice.error_recovery = true;
+            return emergencyAdvice;
+        }
+    }
+
+    async initializeAIEngine() {
+        try {
+            if (!window.aiEngine && window.PWAAIEngine) {
+                window.aiEngine = new PWAAIEngine();
+                
+                // Initialize with local storage if available
+                if (window.localStorage) {
+                    await window.aiEngine.init(window.localStorage);
+                } else {
+                    await window.aiEngine.init(null);
+                }
+                
+                console.log('✅ AI Engine initialized for conversation coaching');
+            }
+        } catch (error) {
+            console.error('❌ Error initializing AI engine:', error);
         }
     }
 
