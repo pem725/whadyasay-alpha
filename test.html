@@ -7,25 +7,19 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
             background: #f5f5f5;
         }
-        .container {
+        .test-card {
             background: white;
-            padding: 30px;
             border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .status {
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        button {
+        .btn {
             background: #007bff;
             color: white;
             border: none;
@@ -34,88 +28,223 @@
             cursor: pointer;
             margin: 5px;
         }
-        button:hover { background: #0056b3; }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn.red {
+            background: #dc3545;
+        }
+        .btn.red:hover {
+            background: #c82333;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🧪 What Do You Say? - Test Page</h1>
-        <p>This is a test page to verify the deployment is working.</p>
-        
-        <div class="status success">
-            ✅ <strong>GitHub Pages Deployment:</strong> SUCCESS
-        </div>
-        
-        <div class="status success">
-            ✅ <strong>HTML/CSS Loading:</strong> SUCCESS
-        </div>
-        
-        <div id="jsStatus" class="status error">
-            ❌ <strong>JavaScript:</strong> TESTING...
-        </div>
-        
-        <h3>File Tests:</h3>
-        <button onclick="testFile('auth.html')">Test auth.html</button>
-        <button onclick="testFile('index.html')">Test index.html</button>
-        <button onclick="testFile('manifest.json')">Test manifest.json</button>
-        <button onclick="testFile('pwa-core.js')">Test pwa-core.js</button>
-        
-        <div id="fileResults"></div>
-        
-        <h3>Quick Links:</h3>
-        <p>
-            <a href="index.html">🏠 Main App</a> |
-            <a href="auth.html">🔐 Authentication</a> |
-            <a href="manifest.json">📱 Manifest</a>
-        </p>
-        
-        <h3>Debug Info:</h3>
-        <div id="debugInfo"></div>
+    <h1>🧪 Test Page - What Do You Say?</h1>
+    
+    <div class="test-card">
+        <h2>Quick Tests</h2>
+        <p>Test the app functionality quickly:</p>
+        <button class="btn" onclick="window.location.href='index.html'">🏠 Main App</button>
+        <button class="btn" onclick="window.location.href='diagnostics.html'">🧪 Diagnostics</button>
+        <button class="btn" onclick="window.location.href='index.html?force_onboarding=true'">🚀 Force Onboarding</button>
+        <button class="btn red" onclick="clearAllData()">🧹 Clear All Data</button>
+    </div>
+
+    <div class="test-card">
+        <h2>Storage Status</h2>
+        <div id="storage-status"></div>
+        <button class="btn" onclick="checkStorage()">🔍 Check Storage</button>
+    </div>
+
+    <div class="test-card">
+        <h2>Browser Compatibility</h2>
+        <div id="browser-status"></div>
+        <button class="btn" onclick="checkBrowser()">🔍 Check Browser</button>
+    </div>
+
+    <div class="test-card">
+        <h2>WebLLM Test</h2>
+        <div id="webllm-status"></div>
+        <button class="btn" onclick="testWebLLM()">🤖 Test WebLLM</button>
+    </div>
+
+    <div class="test-card">
+        <h2>Console Log</h2>
+        <div id="console-log" class="log">Console output will appear here...</div>
+        <button class="btn" onclick="clearLog()">🧹 Clear Log</button>
     </div>
 
     <script>
-        // Test JavaScript is working
-        document.getElementById('jsStatus').innerHTML = '✅ <strong>JavaScript:</strong> SUCCESS';
-        document.getElementById('jsStatus').className = 'status success';
+        // Custom logging
+        const logDiv = document.getElementById('console-log');
+        const originalLog = console.log;
         
-        // Show debug info
-        const debugInfo = document.getElementById('debugInfo');
-        debugInfo.innerHTML = `
-            <p><strong>URL:</strong> ${window.location.href}</p>
-            <p><strong>User Agent:</strong> ${navigator.userAgent}</p>
-            <p><strong>Online:</strong> ${navigator.onLine}</p>
-            <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
-        `;
-        
-        async function testFile(filename) {
-            const resultsDiv = document.getElementById('fileResults');
-            
-            try {
-                const response = await fetch(filename);
-                const status = response.ok ? 'SUCCESS' : 'FAILED';
-                const statusClass = response.ok ? 'success' : 'error';
-                const icon = response.ok ? '✅' : '❌';
-                
-                resultsDiv.innerHTML += `
-                    <div class="status ${statusClass}">
-                        ${icon} <strong>${filename}:</strong> ${status} (${response.status})
-                    </div>
-                `;
-            } catch (error) {
-                resultsDiv.innerHTML += `
-                    <div class="status error">
-                        ❌ <strong>${filename}:</strong> ERROR - ${error.message}
-                    </div>
-                `;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logDiv.innerHTML += args.join(' ') + '\n';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+
+        // Clear all data
+        function clearAllData() {
+            if (confirm('This will clear all app data. Are you sure?')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                            registration.unregister();
+                        }
+                    });
+                }
+                console.log('🧹 All data cleared');
+                alert('All data cleared. You can now test the app from scratch.');
             }
         }
-        
-        // Auto-test key files
-        setTimeout(() => {
-            testFile('auth.html');
-            testFile('index.html');
-            testFile('manifest.json');
-        }, 1000);
+
+        // Check storage
+        function checkStorage() {
+            const statusDiv = document.getElementById('storage-status');
+            let html = '<h3>Storage Contents:</h3>';
+            
+            html += '<h4>Local Storage:</h4>';
+            if (localStorage.length === 0) {
+                html += '<p class="info">No data in localStorage</p>';
+            } else {
+                html += '<ul>';
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    html += `<li><strong>${key}:</strong> ${value.substring(0, 50)}${value.length > 50 ? '...' : ''}</li>`;
+                }
+                html += '</ul>';
+            }
+            
+            html += '<h4>Session Storage:</h4>';
+            if (sessionStorage.length === 0) {
+                html += '<p class="info">No data in sessionStorage</p>';
+            } else {
+                html += '<ul>';
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    const value = sessionStorage.getItem(key);
+                    html += `<li><strong>${key}:</strong> ${value.substring(0, 50)}${value.length > 50 ? '...' : ''}</li>`;
+                }
+                html += '</ul>';
+            }
+            
+            statusDiv.innerHTML = html;
+        }
+
+        // Check browser
+        function checkBrowser() {
+            const statusDiv = document.getElementById('browser-status');
+            let html = '<h3>Browser Compatibility:</h3>';
+            
+            const tests = [
+                { name: 'WebGPU', check: () => !!navigator.gpu },
+                { name: 'WebAssembly', check: () => typeof WebAssembly === 'object' },
+                { name: 'SharedArrayBuffer', check: () => typeof SharedArrayBuffer !== 'undefined' },
+                { name: 'Service Worker', check: () => 'serviceWorker' in navigator },
+                { name: 'IndexedDB', check: () => 'indexedDB' in window },
+                { name: 'WebRTC', check: () => 'RTCPeerConnection' in window },
+                { name: 'getUserMedia', check: () => 'mediaDevices' in navigator },
+            ];
+            
+            html += '<ul>';
+            for (const test of tests) {
+                const result = test.check();
+                html += `<li><strong>${test.name}:</strong> ${result ? '✅ Supported' : '❌ Not supported'}</li>`;
+            }
+            html += '</ul>';
+            
+            html += '<h4>Device Info:</h4>';
+            html += `<p><strong>User Agent:</strong> ${navigator.userAgent}</p>`;
+            html += `<p><strong>RAM:</strong> ${navigator.deviceMemory || 'Unknown'}GB</p>`;
+            html += `<p><strong>CPU Cores:</strong> ${navigator.hardwareConcurrency || 'Unknown'}</p>`;
+            html += `<p><strong>Mobile:</strong> ${/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Yes' : 'No'}</p>`;
+            
+            statusDiv.innerHTML = html;
+        }
+
+        // Test WebLLM
+        async function testWebLLM() {
+            const statusDiv = document.getElementById('webllm-status');
+            statusDiv.innerHTML = '<p class="info">Testing WebLLM...</p>';
+            
+            try {
+                console.log('🧪 Testing WebLLM loading...');
+                
+                // Try to load WebLLM library
+                if (!window.WebLLM) {
+                    console.log('📚 Loading WebLLM library...');
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.62/lib/index.min.js';
+                    
+                    await new Promise((resolve, reject) => {
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                }
+                
+                if (window.WebLLM) {
+                    console.log('✅ WebLLM library loaded successfully');
+                    
+                    // Test creating an engine
+                    const engine = new window.WebLLM.MLCEngine();
+                    console.log('✅ WebLLM engine created');
+                    
+                    statusDiv.innerHTML = '<p class="success">✅ WebLLM is working! Engine created successfully.</p>';
+                } else {
+                    throw new Error('WebLLM library not available');
+                }
+                
+            } catch (error) {
+                console.error('❌ WebLLM test failed:', error);
+                statusDiv.innerHTML = `<p class="error">❌ WebLLM test failed: ${error.message}</p>`;
+            }
+        }
+
+        // Clear log
+        function clearLog() {
+            logDiv.innerHTML = 'Console output will appear here...\n';
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', function() {
+            console.log('🧪 Test page loaded');
+            checkStorage();
+            checkBrowser();
+        });
     </script>
 </body>
 </html>

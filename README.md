@@ -1,10 +1,175 @@
-# What Do You Say? 💬
+# 💬 What Do You Say? - AI Conversation Coach
 
-A **secure, personal conversation coach** that helps you navigate difficult conversations using AI and your own encrypted communication patterns. Your data is completely private and owned by you.
+A privacy-first conversation coaching app that runs AI models directly in your browser. Get personalized advice for any conversation - work, relationships, difficult discussions, and more.
 
-## 🎯 Project Status: **PRODUCTION READY** ✅
+## 🚀 **Try It Now (Alpha Version)**
 
-**What Do You Say?** is a fully functional, encrypted personal conversation coach with complete end-to-end security, offline-first PWA capabilities, and advanced media processing for RAG-enhanced learning. All your personal communication data is encrypted and only you have the keys.
+### **For Mobile Users:**
+1. **Open on your phone**: [https://pem725.github.io/whadyasay-alpha/](https://pem725.github.io/whadyasay-alpha/)
+2. **Add to Home Screen**: 
+   - iPhone: Tap Share → Add to Home Screen
+   - Android: Tap Menu → Add to Home Screen
+3. **Complete 5-minute setup** to download your personal AI model
+4. **Start getting conversation advice** immediately
+
+### **For Desktop Users:**
+1. **Visit**: [https://pem725.github.io/whadyasay-alpha/](https://pem725.github.io/whadyasay-alpha/)
+2. **Complete setup** to download AI model
+3. **Use immediately** - no installation required
+
+## 🧪 **Test the Technology**
+
+**Diagnostics Page**: [https://pem725.github.io/whadyasay-alpha/diagnostics.html](https://pem725.github.io/whadyasay-alpha/diagnostics.html)
+
+Use this page to:
+- Test if your device supports AI processing
+- Verify model downloads work correctly
+- Check real AI response generation
+- Debug any issues with the technology
+
+## ✨ **Key Features**
+
+### **🤖 Real AI Processing**
+- Uses actual AI models (Llama, Phi, Gemma) in your browser
+- Dynamic, personalized conversation advice
+- Not just templates - real AI understanding
+
+### **🔒 Complete Privacy**
+- AI runs 100% on your device
+- Nothing sent to external servers
+- HIPAA-compliant local storage
+- Your conversations never leave your device
+
+### **📱 Mobile-First Design**
+- Works on any modern smartphone
+- No app store downloads required
+- Progressive Web App (PWA) technology
+- Offline functionality after setup
+
+### **🎯 Conversation Coaching**
+- Work discussions (raises, feedback, meetings)
+- Relationship conversations (conflicts, apologies)
+- Family communications (difficult topics)
+- Social situations (networking, dating)
+- Professional scenarios (interviews, presentations)
+
+## 🔧 **Technical Requirements**
+
+### **Supported Browsers:**
+- ✅ Chrome/Edge (Desktop & Mobile)
+- ✅ Safari (Desktop & Mobile)
+- ✅ Firefox (Desktop & Mobile)
+- ⚠️ Older browsers may not support AI features
+
+### **Device Requirements:**
+- **Minimum**: 4GB RAM for basic models
+- **Recommended**: 6GB+ RAM for best experience
+- **Storage**: 1-3GB for AI model (one-time download)
+- **Internet**: Required for initial setup only
+
+### **Privacy Features:**
+- WebGPU/WebAssembly for local AI processing
+- Encrypted local storage
+- No external API calls after setup
+- All processing happens in your browser
+
+## 🛠️ **Development Setup**
+
+If you want to contribute or run locally:
+
+```bash
+# Clone the repository
+git clone https://github.com/pem725/whadyasay-alpha.git
+cd whadyasay-alpha
+
+# Serve locally (any method works)
+python -m http.server 8000
+# or
+npx serve .
+# or
+php -S localhost:8000
+
+# Open in browser
+open http://localhost:8000
+```
+
+## 📋 **Testing Checklist**
+
+Before reporting issues, please test:
+
+1. **Visit diagnostics page** to verify your device compatibility
+2. **Complete onboarding** to download an AI model
+3. **Test conversation advice** with a real scenario
+4. **Check browser console** for any error messages
+5. **Try on different devices** to compare performance
+
+## 🐛 **Known Issues & Solutions**
+
+### **"AI Initializing..." Never Changes**
+- **Cause**: Browser doesn't support WebLLM or model download failed
+- **Solution**: Visit diagnostics page to test compatibility
+- **Fallback**: App will use enhanced templates instead
+
+### **Model Download Fails**
+- **Cause**: Insufficient RAM or browser compatibility
+- **Solution**: Try a smaller model or different browser
+- **Fallback**: Enhanced conversation templates still available
+
+### **Slow Performance**
+- **Cause**: Large model on limited hardware
+- **Solution**: Clear storage and select smaller model
+- **Optimization**: Use recommended model for your device
+
+### **App Won't Load**
+- **Cause**: Browser compatibility or network issues
+- **Solution**: Try different browser or check network connection
+- **Debug**: Check browser console for error messages
+
+## 🔄 **How It Works**
+
+1. **Initial Load**: App downloads in seconds (PWA technology)
+2. **Onboarding**: One-time setup to select and download AI model
+3. **AI Processing**: All conversation analysis happens locally
+4. **Advice Generation**: Real-time, personalized coaching advice
+5. **Memory Building**: App learns your communication patterns (stored locally)
+
+## 📱 **Mobile Experience**
+
+The app is optimized for mobile use:
+- **Touch-friendly interface** with large buttons
+- **Voice input support** for hands-free operation
+- **Offline functionality** after initial setup
+- **Home screen installation** for native app feel
+- **Mobile-optimized AI models** for better performance
+
+## 🤝 **Contributing**
+
+This is an alpha version. Contributions welcome:
+- Report bugs via GitHub issues
+- Test on different devices and browsers
+- Suggest improvements for conversation coaching
+- Help improve mobile experience
+
+## 📄 **License**
+
+MIT License - see LICENSE file for details.
+
+## 🔗 **Quick Links**
+
+- **Live App**: [https://pem725.github.io/whadyasay-alpha/](https://pem725.github.io/whadyasay-alpha/)
+- **Diagnostics**: [https://pem725.github.io/whadyasay-alpha/diagnostics.html](https://pem725.github.io/whadyasay-alpha/diagnostics.html)
+- **GitHub**: [https://github.com/pem725/whadyasay-alpha](https://github.com/pem725/whadyasay-alpha)
+- **Issues**: [https://github.com/pem725/whadyasay-alpha/issues](https://github.com/pem725/whadyasay-alpha/issues)
+
+---
+
+**⚠️ Alpha Version**: This is experimental software. Some features may not work on all devices. Use the diagnostics page to verify compatibility before reporting issues.
+
+---
+
+# 🔧 **Advanced Information**
+
+## Architecture Overview
 
 ## 🔐 Core Security Features (NEW!)
 

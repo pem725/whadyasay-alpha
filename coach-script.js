@@ -1103,12 +1103,24 @@ async function initializeApp() {
     console.log('🔍 Onboarding skipped:', localStorage.getItem('whaddyasay_onboarding_skipped'));
     console.log('🔍 Selected model:', localStorage.getItem('whaddyasay_selected_model'));
     
-    if (MobileOnboarding.shouldShowOnboarding()) {
+    // Check for force onboarding parameter (for testing)
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceOnboarding = urlParams.get('force_onboarding') === 'true';
+    
+    if (forceOnboarding) {
+        console.log('🔄 Force onboarding requested - clearing storage');
+        localStorage.removeItem('whaddyasay_onboarding_completed');
+        localStorage.removeItem('whaddyasay_onboarding_skipped');
+        localStorage.removeItem('whaddyasay_selected_model');
+    }
+    
+    if (MobileOnboarding.shouldShowOnboarding() || forceOnboarding) {
         console.log('🚀 Starting mobile onboarding flow...');
         const onboarding = new MobileOnboarding();
         await onboarding.startOnboarding();
     } else {
         console.log('⏭️ Onboarding skipped - user has already completed or skipped it');
+        console.log('💡 To force onboarding, add ?force_onboarding=true to URL');
     }
     
     // Initialize the conversation coach

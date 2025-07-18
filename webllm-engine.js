@@ -15,38 +15,38 @@ class WebLLMEngine {
         this.onProgressCallback = null;
         this.isDownloading = false;
         this.modelConfig = {
-            // Mobile-optimized models (smaller, faster)
-            'phi-2': {
-                name: 'Phi-2',
-                size: '1.4GB',
-                description: 'Microsoft\'s efficient 2.7B model, great for mobile',
-                model_id: 'microsoft/phi-2',
+            // Mobile-optimized models with correct WebLLM IDs
+            'llama-3.2-1b': {
+                name: 'Llama 3.2 1B',
+                size: '0.8GB',
+                description: 'Meta\'s lightweight model, perfect for mobile',
+                model_id: 'Llama-3.2-1B-Instruct-q4f32_1-MLC',
+                recommended: true,
+                mobile_optimized: true
+            },
+            'phi-3.5-mini': {
+                name: 'Phi-3.5 Mini',
+                size: '2.3GB',
+                description: 'Microsoft\'s efficient model for conversations',
+                model_id: 'Phi-3.5-mini-instruct-q4f16_1-MLC',
                 recommended: true,
                 mobile_optimized: true
             },
             'gemma-2b': {
                 name: 'Gemma 2B',
-                size: '1.5GB', 
-                description: 'Google\'s lightweight model for conversations',
-                model_id: 'google/gemma-2b-it',
-                recommended: true,
-                mobile_optimized: true
-            },
-            'tinyllama': {
-                name: 'TinyLlama',
-                size: '637MB',
-                description: 'Ultra-small model for basic conversations',
-                model_id: 'tinyllama/tinyllama-1.1b-chat',
+                size: '1.6GB',
+                description: 'Google\'s conversational model',
+                model_id: 'gemma-2-2b-it-q4f16_1-MLC',
                 recommended: false,
                 mobile_optimized: true
             },
-            'mistral-7b': {
-                name: 'Mistral 7B',
-                size: '4.2GB',
-                description: 'High-quality model (requires 8GB+ RAM)',
-                model_id: 'mistralai/mistral-7b-instruct',
+            'qwen-0.5b': {
+                name: 'Qwen 0.5B',
+                size: '0.4GB',
+                description: 'Ultra-lightweight model for basic conversations',
+                model_id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC',
                 recommended: false,
-                mobile_optimized: false
+                mobile_optimized: true
             }
         };
     }
@@ -115,7 +115,7 @@ class WebLLMEngine {
 
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/index.min.js';
+            script.src = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.62/lib/index.min.js';
             script.onload = () => {
                 console.log('📚 WebLLM library loaded');
                 resolve();
@@ -238,13 +238,16 @@ class WebLLMEngine {
     getRecommendedModel() {
         // Check available RAM (rough estimate)
         const ramEstimate = navigator.deviceMemory || 4; // GB
+        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-        if (ramEstimate >= 8) {
-            return 'phi-2'; // Best quality for good hardware
+        if (ramEstimate >= 8 && !isMobile) {
+            return 'phi-3.5-mini'; // Best quality for good hardware
         } else if (ramEstimate >= 6) {
             return 'gemma-2b'; // Good balance
+        } else if (ramEstimate >= 4) {
+            return 'llama-3.2-1b'; // Lightweight but capable
         } else {
-            return 'tinyllama'; // Lightweight for lower-end devices
+            return 'qwen-0.5b'; // Ultra-lightweight for lower-end devices
         }
     }
 
@@ -331,13 +334,17 @@ class WebLLMEngine {
             const ramEstimate = navigator.deviceMemory || 4;
             const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
+            const recommended = ramEstimate >= 8 && !isMobile ? 'phi-3.5-mini' : 
+                               ramEstimate >= 6 ? 'gemma-2b' : 
+                               ramEstimate >= 4 ? 'llama-3.2-1b' : 'qwen-0.5b';
+            
             return {
                 supported: hasWebAssembly,
                 webgpu: hasWebGPU,
                 ram_estimate: ramEstimate,
                 is_mobile: isMobile,
                 shared_array_buffer: hasSharedArrayBuffer,
-                recommended_model: ramEstimate >= 8 ? 'phi-2' : ramEstimate >= 6 ? 'gemma-2b' : 'tinyllama'
+                recommended_model: recommended
             };
             
         } catch (error) {

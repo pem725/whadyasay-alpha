@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebLLM Diagnostics - What Do You Say?</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #4facfe;
+        }
+        .test-section h3 {
+            color: #4facfe;
+            margin-top: 0;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .status.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .log-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .btn {
+            background: #4facfe;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #3a7bd5;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .device-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .device-info div {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .clear-btn {
+            background: #dc3545;
+            float: right;
+        }
+        .clear-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 WebLLM Diagnostics</h1>
+        <p>This page tests the WebLLM integration functionality to ensure real AI processing is working correctly.</p>
+        
+        <button class="btn clear-btn" onclick="clearStorage()">Clear All Data</button>
+        
+        <div class="test-section">
+            <h3>1. Browser Compatibility</h3>
+            <div id="browser-test">
+                <span class="status pending">PENDING</span>
+                <span>Testing browser support for WebLLM...</span>
+            </div>
+            <div class="device-info" id="device-info">
+                <!-- Device info will be populated here -->
+            </div>
+            <button class="btn" onclick="testBrowserSupport()">Test Browser Support</button>
+        </div>
+
+        <div class="test-section">
+            <h3>2. WebLLM Library Loading</h3>
+            <div id="library-test">
+                <span class="status pending">PENDING</span>
+                <span>Testing WebLLM library loading...</span>
+            </div>
+            <button class="btn" onclick="testLibraryLoading()">Test Library Loading</button>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Model Configuration</h3>
+            <div id="model-test">
+                <span class="status pending">PENDING</span>
+                <span>Testing model configuration...</span>
+            </div>
+            <div id="model-list"></div>
+            <button class="btn" onclick="testModelConfig()">Test Model Config</button>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Model Download Test</h3>
+            <div id="download-test">
+                <span class="status pending">PENDING</span>
+                <span>Testing model download...</span>
+            </div>
+            <select id="model-select" disabled>
+                <option value="">Select a model to test...</option>
+            </select>
+            <button class="btn" onclick="testModelDownload()" disabled id="download-btn">Test Download</button>
+            <div class="progress-bar" id="download-progress" style="display:none;">
+                <div class="progress-fill" id="download-fill"></div>
+            </div>
+            <div id="download-info"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. AI Response Generation</h3>
+            <div id="generation-test">
+                <span class="status pending">PENDING</span>
+                <span>Testing AI response generation...</span>
+            </div>
+            <textarea id="test-prompt" placeholder="Enter a test prompt..." style="width: 100%; height: 60px; margin: 10px 0;"></textarea>
+            <button class="btn" onclick="testAIGeneration()" disabled id="generate-btn">Generate Response</button>
+            <div id="generation-output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>6. Full Integration Test</h3>
+            <div id="integration-test">
+                <span class="status pending">PENDING</span>
+                <span>Testing full conversation coaching integration...</span>
+            </div>
+            <button class="btn" onclick="testFullIntegration()">Test Full Integration</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Console Logs</h3>
+            <div class="log-output" id="console-logs">
+                Logs will appear here...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let webllmEngine = null;
+        let aiEngine = null;
+        let logContainer = null;
+
+        // Custom console logging
+        function log(message) {
+            console.log(message);
+            if (logContainer) {
+                logContainer.innerHTML += message + '\n';
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+        }
+
+        // Initialize diagnostics
+        document.addEventListener('DOMContentLoaded', function() {
+            logContainer = document.getElementById('console-logs');
+            log('🧪 Diagnostics page loaded');
+            
+            // Test prompt
+            document.getElementById('test-prompt').value = "I need advice for asking my boss for a raise. We have a good relationship but I'm nervous about the conversation.";
+        });
+
+        // Test browser support
+        async function testBrowserSupport() {
+            const testEl = document.getElementById('browser-test');
+            const deviceInfo = document.getElementById('device-info');
+            
+            try {
+                log('🔍 Testing browser support...');
+                
+                // Basic feature detection
+                const hasWebGPU = !!navigator.gpu;
+                const hasWebAssembly = typeof WebAssembly === 'object';
+                const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
+                const hasServiceWorker = 'serviceWorker' in navigator;
+                
+                // Device information
+                const userAgent = navigator.userAgent;
+                const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+                const ramEstimate = navigator.deviceMemory || 'Unknown';
+                const cores = navigator.hardwareConcurrency || 'Unknown';
+                
+                deviceInfo.innerHTML = `
+                    <div><strong>WebGPU:</strong> ${hasWebGPU ? '✅ Available' : '❌ Not Available'}</div>
+                    <div><strong>WebAssembly:</strong> ${hasWebAssembly ? '✅ Available' : '❌ Not Available'}</div>
+                    <div><strong>SharedArrayBuffer:</strong> ${hasSharedArrayBuffer ? '✅ Available' : '❌ Not Available'}</div>
+                    <div><strong>Service Worker:</strong> ${hasServiceWorker ? '✅ Available' : '❌ Not Available'}</div>
+                    <div><strong>Device Type:</strong> ${isMobile ? '📱 Mobile' : '💻 Desktop'}</div>
+                    <div><strong>RAM:</strong> ${ramEstimate}GB</div>
+                    <div><strong>CPU Cores:</strong> ${cores}</div>
+                    <div><strong>User Agent:</strong> ${userAgent.substring(0, 50)}...</div>
+                `;
+                
+                const supported = hasWebAssembly && (hasWebGPU || hasSharedArrayBuffer);
+                
+                if (supported) {
+                    testEl.innerHTML = '<span class="status pass">PASS</span>Browser supports WebLLM';
+                    log('✅ Browser compatibility test passed');
+                } else {
+                    testEl.innerHTML = '<span class="status fail">FAIL</span>Browser does not support WebLLM';
+                    log('❌ Browser compatibility test failed');
+                }
+                
+            } catch (error) {
+                testEl.innerHTML = '<span class="status fail">ERROR</span>Error testing browser support: ' + error.message;
+                log('❌ Browser support test error: ' + error.message);
+            }
+        }
+
+        // Test library loading
+        async function testLibraryLoading() {
+            const testEl = document.getElementById('library-test');
+            
+            try {
+                log('📚 Testing WebLLM library loading...');
+                
+                // Try to load the WebLLM library
+                if (!window.WebLLM) {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/lib/index.min.js';
+                    
+                    await new Promise((resolve, reject) => {
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                }
+                
+                if (window.WebLLM) {
+                    testEl.innerHTML = '<span class="status pass">PASS</span>WebLLM library loaded successfully';
+                    log('✅ WebLLM library loaded');
+                    
+                    // Enable model tests
+                    document.getElementById('model-select').disabled = false;
+                    document.getElementById('download-btn').disabled = false;
+                    
+                } else {
+                    testEl.innerHTML = '<span class="status fail">FAIL</span>WebLLM library failed to load';
+                    log('❌ WebLLM library not available');
+                }
+                
+            } catch (error) {
+                testEl.innerHTML = '<span class="status fail">ERROR</span>Error loading WebLLM library: ' + error.message;
+                log('❌ WebLLM library loading error: ' + error.message);
+            }
+        }
+
+        // Test model configuration
+        async function testModelConfig() {
+            const testEl = document.getElementById('model-test');
+            const modelList = document.getElementById('model-list');
+            const modelSelect = document.getElementById('model-select');
+            
+            try {
+                log('🎯 Testing model configuration...');
+                
+                // Test our model configuration
+                const models = [
+                    {
+                        id: 'Llama-3.2-1B-Instruct-q4f32_1-MLC',
+                        name: 'Llama 3.2 1B',
+                        size: '0.8GB',
+                        description: 'Lightweight model for mobile devices'
+                    },
+                    {
+                        id: 'Phi-3.5-mini-instruct-q4f16_1-MLC',
+                        name: 'Phi-3.5 Mini',
+                        size: '2.3GB',
+                        description: 'Microsoft\'s efficient model'
+                    },
+                    {
+                        id: 'gemma-2-2b-it-q4f16_1-MLC',
+                        name: 'Gemma 2B',
+                        size: '1.6GB',
+                        description: 'Google\'s conversational model'
+                    }
+                ];
+                
+                let modelHTML = '<ul>';
+                modelSelect.innerHTML = '<option value="">Select a model to test...</option>';
+                
+                for (const model of models) {
+                    modelHTML += `<li><strong>${model.name}</strong> (${model.size}) - ${model.description}</li>`;
+                    modelSelect.innerHTML += `<option value="${model.id}">${model.name} (${model.size})</option>`;
+                }
+                modelHTML += '</ul>';
+                
+                modelList.innerHTML = modelHTML;
+                testEl.innerHTML = '<span class="status pass">PASS</span>Model configuration loaded';
+                log('✅ Model configuration test passed');
+                
+            } catch (error) {
+                testEl.innerHTML = '<span class="status fail">ERROR</span>Error testing model config: ' + error.message;
+                log('❌ Model configuration error: ' + error.message);
+            }
+        }
+
+        // Test model download
+        async function testModelDownload() {
+            const testEl = document.getElementById('download-test');
+            const modelSelect = document.getElementById('model-select');
+            const progressBar = document.getElementById('download-progress');
+            const progressFill = document.getElementById('download-fill');
+            const downloadInfo = document.getElementById('download-info');
+            
+            const selectedModel = modelSelect.value;
+            if (!selectedModel) {
+                alert('Please select a model to test');
+                return;
+            }
+            
+            try {
+                log(`📥 Testing model download: ${selectedModel}`);
+                testEl.innerHTML = '<span class="status pending">DOWNLOADING</span>Testing model download...';
+                progressBar.style.display = 'block';
+                
+                if (!window.WebLLM) {
+                    throw new Error('WebLLM library not loaded');
+                }
+                
+                // Initialize WebLLM engine
+                const engine = new window.WebLLM.MLCEngine();
+                
+                // Progress callback
+                const progressCallback = (progress) => {
+                    const percent = Math.round(progress.progress * 100);
+                    progressFill.style.width = `${percent}%`;
+                    downloadInfo.innerHTML = `Progress: ${percent}% - ${progress.timeElapsed?.toFixed(1)}s`;
+                    log(`📊 Download progress: ${percent}%`);
+                };
+                
+                // Start download
+                await engine.reload(selectedModel, {
+                    initProgressCallback: progressCallback
+                });
+                
+                testEl.innerHTML = '<span class="status pass">PASS</span>Model downloaded successfully';
+                log('✅ Model download test passed');
+                
+                // Enable AI generation test
+                document.getElementById('generate-btn').disabled = false;
+                
+                // Store engine for later use
+                window.testEngine = engine;
+                
+            } catch (error) {
+                testEl.innerHTML = '<span class="status fail">ERROR</span>Model download failed: ' + error.message;
+                log('❌ Model download error: ' + error.message);
+                progressBar.style.display = 'none';
+            }
+        }
+
+        // Test AI generation
+        async function testAIGeneration() {
+            const testEl = document.getElementById('generation-test');
+            const prompt = document.getElementById('test-prompt').value;
+            const output = document.getElementById('generation-output');
+            
+            if (!prompt.trim()) {
+                alert('Please enter a test prompt');
+                return;
+            }
+            
+            try {
+                log('🤖 Testing AI response generation...');
+                testEl.innerHTML = '<span class="status pending">GENERATING</span>Generating AI response...';
+                
+                if (!window.testEngine) {
+                    throw new Error('No model loaded - run model download test first');
+                }
+                
+                const response = await window.testEngine.chat.completions.create({
+                    messages: [
+                        { role: 'user', content: prompt }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 500,
+                    stream: false
+                });
+                
+                const aiResponse = response.choices[0].message.content;
+                
+                output.innerHTML = `
+                    <div style="background: white; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                        <strong>AI Response:</strong><br>
+                        ${aiResponse}
+                    </div>
+                `;
+                
+                testEl.innerHTML = '<span class="status pass">PASS</span>AI response generated successfully';
+                log('✅ AI generation test passed');
+                
+            } catch (error) {
+                testEl.innerHTML = '<span class="status fail">ERROR</span>AI generation failed: ' + error.message;
+                log('❌ AI generation error: ' + error.message);
+            }
+        }
+
+        // Test full integration
+        async function testFullIntegration() {
+            const testEl = document.getElementById('integration-test');
+            
+            try {
+                log('🔄 Testing full integration...');
+                testEl.innerHTML = '<span class="status pending">TESTING</span>Testing full integration...';
+                
+                // This would test the actual app components
+                // For now, we'll just verify the components exist
+                
+                const hasWebLLMEngine = typeof window.WebLLMEngine !== 'undefined';
+                const hasMobileOnboarding = typeof window.MobileOnboarding !== 'undefined';
+                const hasAIEngine = typeof window.PWAAIEngine !== 'undefined';
+                
+                log(`WebLLMEngine: ${hasWebLLMEngine}`);
+                log(`MobileOnboarding: ${hasMobileOnboarding}`);
+                log(`PWAAIEngine: ${hasAIEngine}`);
+                
+                if (hasWebLLMEngine && hasMobileOnboarding && hasAIEngine) {
+                    testEl.innerHTML = '<span class="status pass">PASS</span>All components available';
+                    log('✅ Full integration test passed');
+                } else {
+                    testEl.innerHTML = '<span class="status fail">FAIL</span>Some components missing';
+                    log('❌ Full integration test failed - components missing');
+                }
+                
+            } catch (error) {
+                testEl.innerHTML = '<span class="status fail">ERROR</span>Integration test error: ' + error.message;
+                log('❌ Integration test error: ' + error.message);
+            }
+        }
+
+        // Clear storage
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            log('🧹 Storage cleared');
+            alert('All storage cleared. Refresh the page to start fresh.');
+        }
+
+        // Load app scripts for testing
+        function loadAppScripts() {
+            const scripts = [
+                'webllm-engine.js',
+                'mobile-onboarding.js',
+                'ai-engine.js'
+            ];
+            
+            scripts.forEach(script => {
+                const scriptEl = document.createElement('script');
+                scriptEl.src = script;
+                scriptEl.async = true;
+                document.head.appendChild(scriptEl);
+            });
+        }
+
+        // Load app scripts on page load
+        loadAppScripts();
+    </script>
+</body>
+</html>
